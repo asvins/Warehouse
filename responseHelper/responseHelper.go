@@ -1,4 +1,4 @@
-package main
+package responseHelper
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ type ResponseJSON struct {
 	Error        string      `json:",omitempty"`
 }
 
-func writeBack(w http.ResponseWriter, r *http.Request, i interface{}) {
+func WriteBack(w http.ResponseWriter, r *http.Request, i interface{}) {
 	ct := r.Header.Get("Content-Type")
 	switch ct {
 	case "application/json":

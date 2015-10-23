@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/asvins/warehouse/interceptors"
+	"github.com/asvins/warehouse/inventory"
 	"github.com/rcmgleite/router"
 )
 
@@ -16,14 +17,17 @@ func main() {
 		fmt.Fprint(w, "Request made to '/'")
 	})
 
+	// INVENTORY
 	// product routes
-	r.AddRoute("/api/product", router.GET, GETProductHandler)
-	r.AddRoute("/api/product", router.POST, POSTProductHandler)
-	r.AddRoute("/api/product", router.PUT, PUTProductHandler)
-	r.AddRoute("/api/product", router.DELETE, DELETEProductHandler)
+	r.AddRoute("/api/inventory/product", router.GET, inventory.GETProductHandler)
+	r.AddRoute("/api/inventory/product", router.POST, inventory.POSTProductHandler)
+	r.AddRoute("/api/inventory/product", router.PUT, inventory.PUTProductHandler)
+	r.AddRoute("/api/inventory/product", router.DELETE, inventory.DELETEProductHandler)
 
 	//order routes
-	// - TODO
+	r.AddRoute("/api/inventory/order", router.GET, inventory.GETOrderHandler)
+
+	// SHOP/ACQUIRING
 
 	// interceptors
 	r.AddBaseInterceptor("/", &interceptors.Logger{})

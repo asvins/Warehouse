@@ -10,6 +10,6 @@ type Logger struct{}
 
 //Intercept is the Interceptor interface implementation
 func (l Logger) Intercept(rw http.ResponseWriter, r *http.Request) error {
-	fmt.Println("[LOG] Request from: ", r.RemoteAddr, " on: ", r.URL.String())
+	fmt.Println("[LOG] Request from: ", r.RemoteAddr, " ", r.Method, " ", r.URL.String())
 	return nil
 }
