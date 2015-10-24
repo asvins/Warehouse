@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"log"
+
 	"github.com/asvins/common_interceptors/logger"
+	"github.com/asvins/utils/config"
 	"github.com/rcmgleite/router"
 )
 
@@ -31,6 +34,11 @@ func main() {
 	// interceptors
 	r.AddBaseInterceptor("/", logger.NewLogger())
 
-	fmt.Println("[INFO] Server running on port 8080")
-	http.ListenAndServe(":8080", r)
+	serverConfig, err := config.Load("warehouse_config.gcfg")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("[INFO] Server running on port:", serverConfig.Server.Port)
+	http.ListenAndServe(":"+serverConfig.Server.Port, r)
 }
