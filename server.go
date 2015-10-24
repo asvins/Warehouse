@@ -6,10 +6,26 @@ import (
 
 	"log"
 
+	"github.com/asvins/common_db/postgres"
 	"github.com/asvins/common_interceptors/logger"
 	"github.com/asvins/utils/config"
 	"github.com/rcmgleite/router"
 )
+
+var ServerConfig *Config = new(Config)
+var DatabaseConfig *postgres.Config
+
+// function that will run before main
+func init() {
+	fmt.Println("[INFO] Initializing server")
+	err := config.Load("warehouse_config.gcfg", ServerConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	DatabaseConfig = postgres.NewConfig(ServerConfig.Database.User, ServerConfig.Database.DbName, ServerConfig.Database.SSLMode)
+	fmt.Println("[INFO] Initialization Done!")
+}
 
 func main() {
 	r := router.NewRouter()
@@ -34,12 +50,6 @@ func main() {
 	// interceptors
 	r.AddBaseInterceptor("/", logger.NewLogger())
 
-	serverConfig := Config{}
-	err := config.Load("warehouse_config.gcfg", &serverConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("[INFO] Server running on port:", serverConfig.Server.Port)
-	http.ListenAndServe(":"+serverConfig.Server.Port, r)
+	fmt.Println("[INFO] Server running on port:", ServerConfig.Server.Port)
+	http.ListenAndServe(":"+ServerConfig.Server.Port, r)
 }
