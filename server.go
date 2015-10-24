@@ -34,7 +34,8 @@ func main() {
 	// interceptors
 	r.AddBaseInterceptor("/", logger.NewLogger())
 
-	serverConfig, err := config.Load("warehouse_config.gcfg")
+	serverConfig := Config{}
+	err := config.Load("warehouse_config.gcfg", &serverConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
