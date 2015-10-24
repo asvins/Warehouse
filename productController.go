@@ -1,16 +1,15 @@
-package inventory
+package main
 
 import (
 	"net/http"
 
+	"github.com/asvins/utils/responseHelper"
 	"github.com/asvins/warehouse/decoder"
-	"github.com/asvins/warehouse/models"
-	"github.com/asvins/warehouse/responseHelper"
 )
 
 func GETProductHandler(w http.ResponseWriter, r *http.Request) {
 	queryString := r.URL.Query()
-	var p models.Product
+	var p Product
 
 	decoder := decoder.NewDecoder()
 	err := decoder.DecodeURLValues(&p, queryString)
@@ -29,7 +28,7 @@ func GETProductHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func POSTProductHandler(w http.ResponseWriter, r *http.Request) {
-	var p models.Product
+	var p Product
 	decoder := decoder.NewDecoder()
 	err := decoder.DecodeReqBody(&p, r.Body)
 	if err != nil {
@@ -50,7 +49,7 @@ func POSTProductHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PUTProductHandler(w http.ResponseWriter, r *http.Request) {
-	var p models.Product
+	var p Product
 	decoder := decoder.NewDecoder()
 	err := decoder.DecodeReqBody(&p, r.Body)
 
@@ -73,7 +72,7 @@ func PUTProductHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DELETEProductHandler(w http.ResponseWriter, r *http.Request) {
-	var p models.Product
+	var p Product
 	decoder := decoder.NewDecoder()
 	err := decoder.DecodeReqBody(&p, r.Body)
 

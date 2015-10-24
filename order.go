@@ -1,9 +1,9 @@
-package models
+package main
 
 import (
 	"fmt"
 
-	"github.com/asvins/warehouse/database"
+	"github.com/asvins/common_db/postgres"
 )
 
 // OrderToSend ...
@@ -22,7 +22,7 @@ type Order struct {
 
 // GetByID ...
 func (order *Order) GetByID(id int) error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 	order.ID = id
 
 	products := []Product{}
@@ -35,7 +35,7 @@ func (order *Order) GetByID(id int) error {
 
 //Save ..
 func (order *Order) Save() error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 	return db.Create(order).Error
 }
 
@@ -47,7 +47,7 @@ func (order *Order) Update() error {
 
 // Delete ...
 func (order *Order) Delete() error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 
 	err := db.Delete(order).Error
 	return err
@@ -55,7 +55,7 @@ func (order *Order) Delete() error {
 
 //GetOpenOrder ...
 func GetOpenOrder(order *Order) error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 	err := db.Where("approved = ?", false).First(order).Error
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func GetOpenOrder(order *Order) error {
 
 // OpenOrderHasProduct ...
 func OpenOrderHasProduct(product Product) (bool, error) {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 
 	order := Order{}
 	err := GetOpenOrder(&order)
@@ -91,7 +91,7 @@ func OpenOrderHasProduct(product Product) (bool, error) {
 
 // RemoveProductFromOpenOrder from the existing opened order
 func RemoveProductFromOpenOrder(product Product) error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 	order := Order{}
 	err := GetOpenOrder(&order)
 	if err != nil {
@@ -114,7 +114,7 @@ func AddProductToOpenOrder(product Product) error {
 }
 
 func (order *Order) createOrderAndAddProduct(product Product) error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 
 	err := db.Create(order).Error
 	if err != nil {
@@ -130,7 +130,7 @@ func (order *Order) createOrderAndAddProduct(product Product) error {
 }
 
 func (order *Order) addProduct(product Product) error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 
 	return db.Model(order).Association("Products").Append([]Product{product}).Error
 }

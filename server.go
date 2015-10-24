@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/asvins/warehouse/interceptors"
-	"github.com/asvins/warehouse/inventory"
+	"github.com/asvins/common_interceptors/logger"
 	"github.com/rcmgleite/router"
 )
 
@@ -19,18 +18,18 @@ func main() {
 
 	// INVENTORY
 	// product routes
-	r.AddRoute("/api/inventory/product", router.GET, inventory.GETProductHandler)
-	r.AddRoute("/api/inventory/product", router.POST, inventory.POSTProductHandler)
-	r.AddRoute("/api/inventory/product", router.PUT, inventory.PUTProductHandler)
-	r.AddRoute("/api/inventory/product", router.DELETE, inventory.DELETEProductHandler)
+	r.AddRoute("/api/inventory/product", router.GET, GETProductHandler)
+	r.AddRoute("/api/inventory/product", router.POST, POSTProductHandler)
+	r.AddRoute("/api/inventory/product", router.PUT, PUTProductHandler)
+	r.AddRoute("/api/inventory/product", router.DELETE, DELETEProductHandler)
 
 	//order routes
-	r.AddRoute("/api/inventory/order", router.GET, inventory.GETOrderHandler)
+	r.AddRoute("/api/inventory/order", router.GET, GETOrderHandler)
 
 	// SHOP/ACQUIRING
 
 	// interceptors
-	r.AddBaseInterceptor("/", &interceptors.Logger{})
+	r.AddBaseInterceptor("/", logger.NewLogger())
 
 	fmt.Println("[INFO] Server running on port 8080")
 	http.ListenAndServe(":8080", r)

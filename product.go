@@ -1,9 +1,9 @@
-package models
+package main
 
 import (
 	"errors"
 
-	"github.com/asvins/warehouse/database"
+	"github.com/asvins/common_db/postgres"
 )
 
 const (
@@ -41,7 +41,7 @@ type Product struct {
 
 //Save ..
 func (p *Product) Save() error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 
 	err := db.Create(p).Error
 	if err != nil {
@@ -57,7 +57,7 @@ func (p *Product) Save() error {
 
 // Update ...
 func (p *Product) Update() error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 
 	err := db.Save(p).Error
 	if err != nil {
@@ -75,13 +75,13 @@ func (p *Product) Update() error {
 
 // Delete ...
 func (p *Product) Delete() error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 	return db.Delete(p).Error
 }
 
 //Retreive ... it uses the object and a plain query to execute sql cmds
 func (p *Product) Retreive() ([]Product, error) {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 	var query string
 	if p.QueryParams != nil {
 		query = buildQuery(p.QueryParams)
@@ -104,7 +104,7 @@ func (p *Product) Retreive() ([]Product, error) {
 
 // Consume ...
 func (p *Product) Consume(quantity int) error {
-	db := database.GetDatabase()
+	db := postgres.GetDatabase()
 
 	var pp Product
 	err := db.Where(*p).First(&pp).Error
