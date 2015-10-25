@@ -41,7 +41,14 @@ func (order *Order) Save() error {
 
 // Update ...
 func (order *Order) Update() error {
-	//TODO
+	db := postgres.GetDatabase(DatabaseConfig)
+
+	err := db.Save(order).Error
+	if err != nil {
+		return err
+	}
+
+	//TODO update stock items
 	return nil
 }
 
