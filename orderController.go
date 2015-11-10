@@ -4,15 +4,14 @@ import (
 	"net/http"
 
 	"github.com/asvins/router/errors"
-	"github.com/asvins/utils/responseHelper"
 	"github.com/asvins/warehouse/decoder"
 )
 
 func GETOrderHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 	var o Order
 	GetOpenOrder(&o)
-	rj := responseHelper.NewResponseJSON(o, nil)
-	responseHelper.WriteBack(w, r, rj)
+
+	rend.JSON(w, http.StatusOK, o)
 	return nil
 }
 
@@ -31,7 +30,6 @@ func PUTOrderHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rj := responseHelper.NewResponseJSON("Order updated successfully", err)
-	responseHelper.WriteBack(w, r, rj)
+	rend.JSON(w, http.StatusOK, "Order updated successfully")
 	return nil
 }

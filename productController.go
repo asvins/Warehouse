@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/asvins/router/errors"
-	"github.com/asvins/utils/responseHelper"
 	"github.com/asvins/warehouse/decoder"
 )
 
@@ -21,8 +20,7 @@ func GETProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	products, err := p.Retreive()
 
-	rj := responseHelper.NewResponseJSON(products, err)
-	responseHelper.WriteBack(w, r, rj)
+	rend.JSON(w, http.StatusOK, products)
 	return nil
 }
 
@@ -39,8 +37,7 @@ func POSTProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rj := responseHelper.NewResponseJSON("Product successfully saved", err)
-	responseHelper.WriteBack(w, r, rj)
+	rend.JSON(w, http.StatusOK, "Product successfully saved")
 	return nil
 }
 
@@ -59,8 +56,7 @@ func PUTProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rj := responseHelper.NewResponseJSON("Product updated successfully", err)
-	responseHelper.WriteBack(w, r, rj)
+	rend.JSON(w, http.StatusOK, "Product updated successfully")
 	return nil
 }
 
@@ -75,7 +71,6 @@ func DELETEProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	err = p.Delete()
 
-	rj := responseHelper.NewResponseJSON("Product deleted successully", err)
-	responseHelper.WriteBack(w, r, rj)
+	rend.JSON(w, http.StatusOK, "Product deleted successfully")
 	return nil
 }
