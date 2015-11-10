@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/asvins/common_interceptors/logger"
 	"github.com/asvins/router"
 	"github.com/asvins/router/errors"
+	"github.com/asvins/router/logger"
 )
 
 func DefRoutes() *router.Router {
