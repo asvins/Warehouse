@@ -26,6 +26,16 @@ func (order *Order) Retreive() ([]Order, error) {
 	var orders []Order
 	err := db.Where(*order).Find(&orders).Error
 
+	for i, o := range orders {
+		products := []Product{}
+		if err := db.Model(o).Related(&products, "Products").Error; err != nil {
+			fmt.Println("[ERROR] ", err.Error())
+			return nil, err
+		}
+		o.Products = products
+		orders[i] = o
+	}
+
 	return orders, err
 }
 

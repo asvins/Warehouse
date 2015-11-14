@@ -187,3 +187,20 @@ func TestDeleteProduct(t *testing.T) {
 
 	fmt.Println("[INFO] -- TestDeleteProduct end --\n")
 }
+
+func TestAddMultipleProducts(t *testing.T) {
+	fmt.Println("[INFO] -- TestDeleteProduct start --")
+
+	for _, value := range products {
+		postProductResponse, err := makeRequest(router.POST, "http://127.0.0.1:8080/api/inventory/product", getBytes(value), _headers)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if postProductResponse.StatusCode != http.StatusOK {
+			t.Error("[ERROR] Status code should be: ", http.StatusOK, " Got: ", postProductResponse.StatusCode)
+		}
+	}
+
+	fmt.Println("[INFO] -- TestDeleteProduct end --\n")
+}

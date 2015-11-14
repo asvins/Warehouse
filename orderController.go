@@ -22,6 +22,10 @@ func retreiveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
+	if len(orders) == 0 {
+		return errors.NotFound("record not found")
+	}
+
 	rend.JSON(w, http.StatusOK, orders)
 	return nil
 }
@@ -39,6 +43,10 @@ func retreiveOrderById(w http.ResponseWriter, r *http.Request) errors.Http {
 	orders, err := o.Retreive()
 	if err != nil {
 		return errors.BadRequest(err.Error())
+	}
+
+	if len(orders) == 0 {
+		return errors.NotFound("record not found")
 	}
 
 	rend.JSON(w, http.StatusOK, orders)
