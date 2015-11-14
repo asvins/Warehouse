@@ -1,28 +1,17 @@
 package main
 
-import (
-	"fmt"
-
-	"github.com/asvins/common_db/postgres"
-)
-
-// OrderToSend ...
-type OrderToSend struct {
-	Products []ProductToSend `json:"produtos"`
-}
+import "fmt"
 
 //Order is the struct that defines the purchase order
 type Order struct {
-	BaseModel `sql:"-" json:",omitempty"` // Ignore this field
-	ID        int
-	Products  []Product `gorm:"many2many:order_products;"`
-	Valor     int       `json:"valor" sql:"-"`
-	Approved  bool
+	ID       int
+	Products []Product `gorm:"many2many:order_products;"`
+	Valor    int       `json:"valor" sql:"-"`
+	Approved bool
 }
 
 // GetByID ...
 func (order *Order) GetByID(id int) error {
-	db := postgres.GetDatabase(DatabaseConfig)
 	order.ID = id
 
 	products := []Product{}
@@ -35,14 +24,11 @@ func (order *Order) GetByID(id int) error {
 
 //Save ..
 func (order *Order) Save() error {
-	db := postgres.GetDatabase(DatabaseConfig)
 	return db.Create(order).Error
 }
 
 // Update ...
 func (order *Order) Update() error {
-	db := postgres.GetDatabase(DatabaseConfig)
-
 	err := db.Save(order).Error
 	if err != nil {
 		return err
@@ -54,15 +40,12 @@ func (order *Order) Update() error {
 
 // Delete ...
 func (order *Order) Delete() error {
-	db := postgres.GetDatabase(DatabaseConfig)
-
 	err := db.Delete(order).Error
 	return err
 }
 
 //GetOpenOrder ...
 func GetOpenOrder(order *Order) error {
-	db := postgres.GetDatabase(DatabaseConfig)
 	err := db.Where("approved = ?", false).First(order).Error
 	if err != nil {
 		return err
@@ -76,8 +59,6 @@ func GetOpenOrder(order *Order) error {
 
 // OpenOrderHasProduct ...
 func OpenOrderHasProduct(product Product) (bool, error) {
-	db := postgres.GetDatabase(DatabaseConfig)
-
 	order := Order{}
 	err := GetOpenOrder(&order)
 	if err != nil {
@@ -98,7 +79,6 @@ func OpenOrderHasProduct(product Product) (bool, error) {
 
 // RemoveProductFromOpenOrder from the existing opened order
 func RemoveProductFromOpenOrder(product Product) error {
-	db := postgres.GetDatabase(DatabaseConfig)
 	order := Order{}
 	err := GetOpenOrder(&order)
 	if err != nil {
@@ -121,8 +101,6 @@ func AddProductToOpenOrder(product Product) error {
 }
 
 func (order *Order) createOrderAndAddProduct(product Product) error {
-	db := postgres.GetDatabase(DatabaseConfig)
-
 	err := db.Create(order).Error
 	if err != nil {
 		return err
@@ -137,7 +115,5 @@ func (order *Order) createOrderAndAddProduct(product Product) error {
 }
 
 func (order *Order) addProduct(product Product) error {
-	db := postgres.GetDatabase(DatabaseConfig)
-
 	return db.Model(order).Association("Products").Append([]Product{product}).Error
 }

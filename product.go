@@ -2,114 +2,75 @@ package main
 
 import (
 	"errors"
-
-	"github.com/asvins/common_db/postgres"
+	"fmt"
 )
-
-const (
-	//FOOD ...
-	FOOD = 1 << iota
-	//CLEANING ...
-	CLEANING
-	//ROOMITENS ...
-	ROOMITENS // towels, bed sheets
-)
-
-// ProductToSend ...
-type ProductToSend struct {
-	ProductID  int     `json:"produto_id"`
-	Valor      float64 `json:"valor"`
-	Quantidade int     `json:"quantidade"`
-}
-
-// ProductToConsume ...
-type ProductToConsume struct {
-	ID       int
-	Quantity int
-}
 
 //Product struct that defines a product
 type Product struct {
-	BaseModel    `sql:"-" json:",omitempty"` // Ignore this field
 	ID           int
 	Name         string `sql:"size:255"`
-	Type         int
+	Type         int    // rethink
 	Description  string `sql:"size:255"`
 	CurrQuantity int
 	MinQuantity  int
+	CurrValue    float64
 }
 
-//Save ..
+//Save new product on database
 func (p *Product) Save() error {
-	db := postgres.GetDatabase(DatabaseConfig)
-
-	err := db.Create(p).Error
-	if err != nil {
+	if err := db.Create(p).Error; err != nil {
 		return err
 	}
 
 	if p.NeedRefill() {
-		err = AddProductToOpenOrder(*p)
+		//return AddProductToOpenOrder(*p)
+		fmt.Println("[INFO] Adding product to order")
 	}
 
-	return err
+	return nil
 }
 
-// Update ...
+// Update product on database
 func (p *Product) Update() error {
-	db := postgres.GetDatabase(DatabaseConfig)
-
-	err := db.Save(p).Error
-	if err != nil {
+	if err := db.Save(p).Error; err != nil {
 		return err
 	}
 
 	if p.NeedRefill() {
-		AddProductToOpenOrder(*p)
-	} else if has, err := OpenOrderHasProduct(*p); has && err == nil {
-		RemoveProductFromOpenOrder(*p)
-	}
-
-	return err
-}
-
-// Delete ...
-func (p *Product) Delete() error {
-	db := postgres.GetDatabase(DatabaseConfig)
-	return db.Delete(p).Error
-}
-
-//Retreive ... it uses the object and a plain query to execute sql cmds
-func (p *Product) Retreive() ([]Product, error) {
-	db := postgres.GetDatabase(DatabaseConfig)
-	var query string
-	if p.QueryParams != nil {
-		query = buildQuery(p.QueryParams)
-	}
-
-	orderBy := p.QueryParams["order_by"]
-
-	var products []Product
-	var err error
-	//Remove queryParams
-	p.QueryParams = nil
-	if orderBy != "" {
-		err = db.Order(orderBy).Where(*p).Find(&products, query).Error
+		// AddProductToOpenOrder(*p)
+		fmt.Println("[INFO] Adding product to order")
 	} else {
-		err = db.Where(*p).Find(&products, query).Error
+		fmt.Println("[INFO] UPDATE - product doesn't need refill")
+		//	has, err := OpenOrderHasProduct(*p)
+		//	if err != nil {
+		//		return err
+		//	}
+		//	if has {
+		//		RemoveProductFromOpenOrder(*p)
+		//	}
 	}
+	return nil
+}
+
+// Delete product on database
+func (p *Product) Delete() error {
+	return db.Where(p).Delete(Product{}).Error
+}
+
+// Retreive product on database
+func (p *Product) Retreive() ([]Product, error) {
+	var products []Product
+	err := db.Where(*p).Find(&products).Error
 
 	return products, err
 }
 
-// Consume ...
+// Consume product using the id provided and quantity
+// if issued quantity > current quantity an error will be returned
 func (p *Product) Consume(quantity int) error {
-	db := postgres.GetDatabase(DatabaseConfig)
-
 	var pp Product
-	err := db.Where(*p).First(&pp).Error
 
-	if err != nil {
+	if err := db.Where(*p).First(&pp).Error; err != nil {
 		return err
 	}
 
@@ -118,16 +79,15 @@ func (p *Product) Consume(quantity int) error {
 	}
 
 	pp.CurrQuantity = pp.CurrQuantity - quantity
-	err = pp.Update()
 
-	if err != nil {
+	if err := pp.Update(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-//NeedRefill verify if product need refill
+// NeedRefill verify if product need refill
 func (p *Product) NeedRefill() bool {
 	if p.CurrQuantity < p.MinQuantity {
 		return true

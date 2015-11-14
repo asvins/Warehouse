@@ -2,38 +2,58 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/asvins/router/errors"
 	"github.com/asvins/warehouse/decoder"
 )
 
-func GETProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
+func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 	queryString := r.URL.Query()
 	var p Product
-
 	decoder := decoder.NewDecoder()
-	err := decoder.DecodeURLValues(&p, queryString)
 
-	if err != nil {
+	if err := decoder.DecodeURLValues(&p, queryString); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
 	products, err := p.Retreive()
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
 
 	rend.JSON(w, http.StatusOK, products)
 	return nil
 }
 
-func POSTProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
-	var p Product
-	decoder := decoder.NewDecoder()
-	err := decoder.DecodeReqBody(&p, r.Body)
+func retreiveProductById(w http.ResponseWriter, r *http.Request) errors.Http {
+	params := r.URL.Query()
+	p := Product{}
+
+	id, err := strconv.Atoi(params.Get("id"))
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+	p.ID = id
+
+	products, err := p.Retreive()
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	err = p.Save()
-	if err != nil {
+	rend.JSON(w, http.StatusOK, products)
+	return nil
+}
+
+func insertProduct(w http.ResponseWriter, r *http.Request) errors.Http {
+	var p Product
+	decoder := decoder.NewDecoder()
+
+	if err := decoder.DecodeReqBody(&p, r.Body); err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	if err := p.Save(); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -41,18 +61,22 @@ func POSTProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 	return nil
 }
 
-func PUTProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
+func updateProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 	var p Product
 	decoder := decoder.NewDecoder()
-	err := decoder.DecodeReqBody(&p, r.Body)
 
-	if err != nil {
+	if err := decoder.DecodeReqBody(&p, r.Body); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	err = p.Update()
-
+	params := r.URL.Query()
+	id, err := strconv.Atoi(params.Get("id"))
 	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+	p.ID = id
+
+	if err := p.Update(); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -60,17 +84,42 @@ func PUTProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
 	return nil
 }
 
-func DELETEProductHandler(w http.ResponseWriter, r *http.Request) errors.Http {
+func deleteProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 	var p Product
 	decoder := decoder.NewDecoder()
-	err := decoder.DecodeReqBody(&p, r.Body)
+
+	if err := decoder.DecodeReqBody(&p, r.Body); err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	if err := p.Delete(); err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	rend.JSON(w, http.StatusOK, "Product deleted successfully")
+	return nil
+}
+
+func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
+	params := r.URL.Query()
+	p := Product{}
+
+	id, err := strconv.Atoi(params.Get("id"))
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+	p.ID = id
+
+	qt, err := strconv.Atoi(params.Get("quantity"))
 
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	err = p.Delete()
+	if err := p.Consume(qt); err != nil {
+		return errors.BadRequest(err.Error())
+	}
 
-	rend.JSON(w, http.StatusOK, "Product deleted successfully")
+	rend.JSON(w, http.StatusOK, "Product consumed successfully")
 	return nil
 }

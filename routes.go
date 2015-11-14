@@ -20,13 +20,15 @@ func DefRoutes() *router.Router {
 
 	// INVENTORY
 	// product routes
-	r.Handle("/api/inventory/product", router.GET, GETProductHandler, []router.Interceptor{})
-	r.Handle("/api/inventory/product", router.POST, POSTProductHandler, []router.Interceptor{})
-	r.Handle("/api/inventory/product", router.PUT, PUTProductHandler, []router.Interceptor{})
-	r.Handle("/api/inventory/product", router.DELETE, DELETEProductHandler, []router.Interceptor{})
+	r.Handle("/api/inventory/product", router.GET, retreiveProduct, []router.Interceptor{})
+	r.Handle("/api/inventory/product/:id", router.GET, retreiveProductById, []router.Interceptor{})
+	r.Handle("/api/inventory/product", router.POST, insertProduct, []router.Interceptor{})
+	r.Handle("/api/inventory/product/:id", router.PUT, updateProduct, []router.Interceptor{})
+	r.Handle("/api/inventory/product", router.DELETE, deleteProduct, []router.Interceptor{})
+	r.Handle("/api/inventory/product/:id/consume/:quantity", router.GET, consumeProduct, []router.Interceptor{})
 
 	//order routes
-	r.Handle("/api/inventory/order", router.GET, GETOrderHandler, []router.Interceptor{})
+	//r.Handle("/api/inventory/order", router.GET, GETOrderHandler, []router.Interceptor{})
 
 	// interceptors
 	r.AddBaseInterceptor("/", logger.NewLogger())
