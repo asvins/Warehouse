@@ -7,13 +7,15 @@ import (
 
 //Product struct that defines a product
 type Product struct {
-	ID           int
-	Name         string `sql:"size:255"`
-	Type         int    // rethink
-	Description  string `sql:"size:255"`
-	CurrQuantity int
-	MinQuantity  int
-	CurrValue    float64
+	ID            int
+	Name          string `sql:"size:255"`
+	Type          int    // rethink
+	Description   string `sql:"size:255"`
+	CurrQuantity  int
+	MinQuantity   int
+	CurrValue     float64
+	PurchProducts []PurchaseProduct
+	Withdrawals   []Withdrawal
 }
 
 //Save new product on database

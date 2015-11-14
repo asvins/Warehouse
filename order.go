@@ -8,8 +8,7 @@ import (
 //Order is the struct that defines the purchase order
 type Order struct {
 	ID        int
-	Products  []Product `gorm:"many2many:order_products;"`
-	Valor     int       `json:"valor" sql:"-"`
+	Pproducts []PurchaseProduct
 	Approved  bool
 	CreatedAt int
 	ClosedAt  int
