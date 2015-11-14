@@ -37,17 +37,15 @@ func (p *Product) Update() error {
 	}
 
 	if p.NeedRefill() {
-		// AddProductToOpenOrder(*p)
-		fmt.Println("[INFO] Adding product to order")
+		return AddProductToOpenOrder(*p)
 	} else {
-		fmt.Println("[INFO] UPDATE - product doesn't need refill")
-		//	has, err := OpenOrderHasProduct(*p)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	if has {
-		//		RemoveProductFromOpenOrder(*p)
-		//	}
+		order, err := OpenOrderHasProduct(*p)
+		if err != nil {
+			return err
+		}
+		if order != nil {
+			order.RemoveProduct(*p)
+		}
 	}
 	return nil
 }

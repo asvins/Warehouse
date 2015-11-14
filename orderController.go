@@ -8,10 +8,12 @@ import (
 )
 
 func GETOrderHandler(w http.ResponseWriter, r *http.Request) errors.Http {
-	var o Order
-	GetOpenOrder(&o)
+	order, err := GetOpenOrder()
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
 
-	rend.JSON(w, http.StatusOK, o)
+	rend.JSON(w, http.StatusOK, order)
 	return nil
 }
 
