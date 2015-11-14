@@ -1,11 +1,18 @@
 package main
 
+import (
+	"fmt"
+	"time"
+)
+
 //Order is the struct that defines the purchase order
 type Order struct {
-	ID       int
-	Products []Product `gorm:"many2many:order_products;"`
-	Valor    int       `json:"valor" sql:"-"`
-	Approved bool
+	ID        int
+	Products  []Product `gorm:"many2many:order_products;"`
+	Valor     int       `json:"valor" sql:"-"`
+	Approved  bool
+	CreatedAt int
+	ClosedAt  int
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -64,6 +71,7 @@ func (order *Order) RemoveProduct(product Product) error {
 
 // createAndAddProduct will create a new order an insert the given product in it
 func (order *Order) createAndAddProduct(product Product) error {
+	order.CreatedAt = int(time.Now().Unix())
 	if err := db.Create(order).Error; err != nil {
 		return err
 	}
@@ -84,12 +92,14 @@ func (order *Order) createAndAddProduct(product Product) error {
 //GetOpenOrder returns an open order if there is one on database
 func GetOpenOrder() (*Order, error) {
 	order := Order{}
-	if err := db.Where("approved = ?", false).First(order).Error; err != nil {
+	if err := db.Where("approved = ?", false).First(&order).Error; err != nil {
+		fmt.Println("[ERROR] ", err.Error())
 		return nil, err
 	}
 
 	products := []Product{}
 	if err := db.Model(order).Related(&products, "Products").Error; err != nil {
+		fmt.Println("[ERROR] ", err.Error())
 		return nil, err
 	}
 	order.Products = products
@@ -102,6 +112,7 @@ func AddProductToOpenOrder(product Product) error {
 	order, err := GetOpenOrder()
 	if err != nil {
 		if err.Error() == "record not found" {
+			order = &Order{}
 			return order.createAndAddProduct(product)
 		}
 		return err

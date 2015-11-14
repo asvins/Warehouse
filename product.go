@@ -23,8 +23,8 @@ func (p *Product) Save() error {
 	}
 
 	if p.NeedRefill() {
-		//return AddProductToOpenOrder(*p)
 		fmt.Println("[INFO] Adding product to order")
+		return AddProductToOpenOrder(*p)
 	}
 
 	return nil

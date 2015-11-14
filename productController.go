@@ -22,7 +22,11 @@ func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
+	if len(products) == 0 {
+		return errors.NotFound("record not found")
+	}
 	rend.JSON(w, http.StatusOK, products)
+
 	return nil
 }
 
@@ -41,6 +45,10 @@ func retreiveProductById(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
+	if len(products) == 0 {
+		return errors.NotFound("record not found")
+	}
+
 	rend.JSON(w, http.StatusOK, products)
 	return nil
 }
@@ -57,7 +65,7 @@ func insertProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product successfully saved")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }
 
@@ -80,23 +88,25 @@ func updateProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product updated successfully")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }
 
 func deleteProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	var p Product
-	decoder := decoder.NewDecoder()
+	params := r.URL.Query()
+	p := Product{}
 
-	if err := decoder.DecodeReqBody(&p, r.Body); err != nil {
+	id, err := strconv.Atoi(params.Get("id"))
+	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
+	p.ID = id
 
 	if err := p.Delete(); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product deleted successfully")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }
 
@@ -120,6 +130,6 @@ func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product consumed successfully")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }
