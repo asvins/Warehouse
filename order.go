@@ -26,12 +26,12 @@ func (order *Order) Retreive() ([]Order, error) {
 	err := db.Where(*order).Find(&orders).Error
 
 	for i, o := range orders {
-		products := []Product{}
-		if err := db.Model(o).Related(&products, "Products").Error; err != nil {
+		pproducts := []PurchaseProduct{}
+		if err := db.Model(o).Related(&pproducts, "Pproducts").Error; err != nil {
 			fmt.Println("[ERROR] ", err.Error())
 			return nil, err
 		}
-		o.Products = products
+		o.Pproducts = pproducts
 		orders[i] = o
 	}
 
@@ -69,8 +69,9 @@ func (order *Order) HasProduct(product Product) (bool, error) {
 	return true, nil
 }
 
-func (order *Order) AddProduct(product Product) error {
-	return db.Model(order).Association("Products").Append([]Product{product}).Error
+func (order *Order) AddProduct(pproduct *PurchaseProduct) error {
+	pproduct.OrderId = order.ID
+	return db.Model(order).Association("Pproducts").Append([]PurchaseProduct{*pproduct}).Error
 }
 
 // RemoveProduct removes a product from the order
@@ -79,17 +80,13 @@ func (order *Order) RemoveProduct(product Product) error {
 }
 
 // createAndAddProduct will create a new order an insert the given product in it
-func (order *Order) createAndAddProduct(product Product) error {
+func (order *Order) createAndAddProduct(pproduct *PurchaseProduct) error {
 	order.CreatedAt = int(time.Now().Unix())
 	if err := db.Create(order).Error; err != nil {
 		return err
 	}
 
-	if err := db.Model(order).Association("Products").Append([]Product{product}).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return order.AddProduct(pproduct)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -106,27 +103,27 @@ func GetOpenOrder() (*Order, error) {
 		return nil, err
 	}
 
-	products := []Product{}
-	if err := db.Model(order).Related(&products, "Products").Error; err != nil {
+	pproducts := []PurchaseProduct{}
+	if err := db.Model(order).Related(&pproducts, "Pproducts").Error; err != nil {
 		fmt.Println("[ERROR] ", err.Error())
 		return nil, err
 	}
-	order.Products = products
+	order.Pproducts = pproducts
 
 	return &order, nil
 }
 
 // AddProduct to the existing open order or creates a new order if it needs
-func AddProductToOpenOrder(product Product) error {
+func AddProductToOpenOrder(pproduct *PurchaseProduct) error {
 	order, err := GetOpenOrder()
 	if err != nil {
 		if err.Error() == "record not found" {
 			order = &Order{}
-			return order.createAndAddProduct(product)
+			return order.createAndAddProduct(pproduct)
 		}
 		return err
 	}
-	return order.AddProduct(product)
+	return order.AddProduct(pproduct)
 }
 
 func OpenOrderHasProduct(product Product) (*Order, error) {

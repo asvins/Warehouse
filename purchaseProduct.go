@@ -7,3 +7,7 @@ type PurchaseProduct struct {
 	ProductId int
 	OrderId   int
 }
+
+func NewPurchaseProduct(p *Product) *PurchaseProduct {
+	return &PurchaseProduct{quantity: (p.MinQuantity - p.CurrQuantity), ProductId: p.ID}
+}

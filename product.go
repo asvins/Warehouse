@@ -26,7 +26,8 @@ func (p *Product) Save() error {
 
 	if p.NeedRefill() {
 		fmt.Println("[INFO] Adding product to order")
-		return AddProductToOpenOrder(*p)
+		pp := NewPurchaseProduct(p)
+		return AddProductToOpenOrder(pp)
 	}
 
 	return nil
@@ -39,7 +40,8 @@ func (p *Product) Update() error {
 	}
 
 	if p.NeedRefill() {
-		return AddProductToOpenOrder(*p)
+		pp := NewPurchaseProduct(p)
+		return AddProductToOpenOrder(pp)
 	} else {
 		order, err := OpenOrderHasProduct(*p)
 		if err != nil {
