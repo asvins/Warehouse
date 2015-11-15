@@ -9,6 +9,14 @@ type PurchaseProduct struct {
 }
 
 func NewPurchaseProduct(p *Product) *PurchaseProduct {
-	quantity := p.MinQuantity - p.CurrQuantity
-	return &PurchaseProduct{Quantity: quantity, ProductId: p.ID}
+	return &PurchaseProduct{Quantity: p.MinQuantity - p.CurrQuantity, ProductId: p.ID}
+}
+
+func (pp *PurchaseProduct) Retreive() ([]PurchaseProduct, error) {
+	var pproducts []PurchaseProduct
+	return pproducts, db.Where(*pp).Find(&pproducts).Error
+}
+
+func (pp *PurchaseProduct) RetreiveOne() error {
+	return db.Where(*pp).First(pp).Error
 }

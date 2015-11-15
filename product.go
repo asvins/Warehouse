@@ -42,12 +42,14 @@ func (p *Product) Update() error {
 		pp := NewPurchaseProduct(p)
 		return AddProductToOpenOrder(pp)
 	} else {
-		order, err := OpenOrderHasProduct(*p)
+		pp := &PurchaseProduct{ProductId: p.ID}
+		order, err := OpenOrderHasProduct(*pp)
 		if err != nil {
 			return err
 		}
 		if order != nil {
-			order.RemoveProduct(*p)
+			pp.OrderId = order.ID
+			order.RemoveProduct(*pp)
 		}
 	}
 	return nil

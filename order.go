@@ -75,8 +75,8 @@ func (order *Order) AddProduct(pproduct *PurchaseProduct) error {
 }
 
 // RemoveProduct removes a product from the order
-func (order *Order) RemoveProduct(product Product) error {
-	return db.Model(order).Association("Products").Delete([]Product{product}).Error
+func (order *Order) RemoveProduct(pproduct PurchaseProduct) error {
+	return db.Debug().Where(&pproduct).Delete(&pproduct).Error
 }
 
 // createAndAddProduct will create a new order an insert the given product in it
@@ -126,13 +126,14 @@ func AddProductToOpenOrder(pproduct *PurchaseProduct) error {
 	return order.AddProduct(pproduct)
 }
 
-func OpenOrderHasProduct(product Product) (*Order, error) {
+// the order must have a PurchaseProduct of type Product ...
+func OpenOrderHasProduct(pproduct PurchaseProduct) (*Order, error) {
 	order, err := GetOpenOrder()
 	if err != nil {
 		return nil, err
 	}
 
-	if err = db.Model(order).Association("Products").Find(&product).Error; err != nil {
+	if err = db.Model(order).Association("Pproducts").Find(&pproduct).Error; err != nil {
 		if err.Error() == "record not found" {
 			return nil, nil
 		}
