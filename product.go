@@ -7,14 +7,14 @@ import (
 
 //Product struct that defines a product
 type Product struct {
-	ID            int
-	Name          string `sql:"size:255"`
-	Type          int    // rethink
-	Description   string `sql:"size:255"`
-	CurrQuantity  int
-	MinQuantity   int
-	PurchProducts []PurchaseProduct
-	Withdrawals   []Withdrawal
+	ID            int               `json:"id"`
+	Name          string            `json:"name" sql:"size:255"`
+	Type          int               `json:"type"`
+	Description   string            `json:"description" sql:"size:255"`
+	CurrQuantity  int               `json:"curr_quantity"`
+	MinQuantity   int               `json:"min_quantity"`
+	PurchProducts []PurchaseProduct `json:"purchase_products"`
+	Withdrawals   []Withdrawal      `json:"withdrawals"`
 }
 
 //Save new product on database
@@ -23,7 +23,7 @@ func (p *Product) Save() error {
 		return err
 	}
 
-	if p.NeedRefill() {
+	if p.CurrQuantity < p.MinQuantity {
 		fmt.Println("[INFO] Adding product to order")
 		pp := NewPurchaseProduct(p)
 		return AddProductToOpenOrder(pp)
@@ -38,7 +38,7 @@ func (p *Product) Update() error {
 		return err
 	}
 
-	if p.NeedRefill() {
+	if p.CurrQuantity < p.MinQuantity {
 		pp := NewPurchaseProduct(p)
 		return AddProductToOpenOrder(pp)
 	} else {
@@ -88,12 +88,4 @@ func (p *Product) Consume(quantity int) error {
 	}
 
 	return nil
-}
-
-// NeedRefill verify if product need refill
-func (p *Product) NeedRefill() bool {
-	if p.CurrQuantity < p.MinQuantity {
-		return true
-	}
-	return false
 }

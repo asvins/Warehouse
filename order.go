@@ -7,11 +7,11 @@ import (
 
 //Order is the struct that defines the purchase order
 type Order struct {
-	ID        int
-	Pproducts []PurchaseProduct
-	Approved  bool
-	CreatedAt int
-	ClosedAt  int
+	ID        int               `json:"id"`
+	Pproducts []PurchaseProduct `json:"purchase_products"`
+	Approved  bool              `json:"approved"`
+	CreatedAt int               `json:"created_at"`
+	ClosedAt  int               `json:"closed_at"`
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -45,11 +45,11 @@ func (order *Order) Save() error {
 
 // Update order on database
 func (order *Order) Update() error {
-	if err := db.Save(order).Error; err != nil {
-		return err
-	}
+	return db.Save(order).Error
+}
 
-	return nil
+func (order *Order) Approve() error {
+	return db.Model(order).Debug().UpdateColumn("approved", "true").Error
 }
 
 // Delete order from database
@@ -76,7 +76,7 @@ func (order *Order) AddProduct(pproduct *PurchaseProduct) error {
 
 // RemoveProduct removes a product from the order
 func (order *Order) RemoveProduct(pproduct PurchaseProduct) error {
-	return db.Debug().Where(&pproduct).Delete(&pproduct).Error
+	return db.Where(&pproduct).Delete(&pproduct).Error
 }
 
 // createAndAddProduct will create a new order an insert the given product in it

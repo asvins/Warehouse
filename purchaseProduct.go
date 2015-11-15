@@ -1,11 +1,11 @@
 package main
 
 type PurchaseProduct struct {
-	ID        int
-	Value     float64
-	Quantity  int
-	ProductId int
-	OrderId   int
+	ID        int     `json:"id"`
+	Value     float64 `json:"value"`
+	Quantity  int     `json:"quantity"`
+	ProductId int     `json:"product_id"`
+	OrderId   int     `json:"order_id"`
 }
 
 func NewPurchaseProduct(p *Product) *PurchaseProduct {

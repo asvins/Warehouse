@@ -30,7 +30,7 @@ func DefRoutes() *router.Router {
 	r.Handle("/api/inventory/order", router.GET, retreiveOrder, []router.Interceptor{})
 	r.Handle("/api/inventory/order/open", router.GET, retreiveOpenOrder, []router.Interceptor{})
 	r.Handle("/api/inventory/order/:id", router.GET, retreiveOrderById, []router.Interceptor{})
-	r.Handle("/api/inventory/order/:id/update", router.PUT, updateOrder, []router.Interceptor{})
+	r.Handle("/api/inventory/order/:id/approve", router.PUT, approveOrder, []router.Interceptor{})
 
 	// interceptors
 	r.AddBaseInterceptor("/", logger.NewLogger())
