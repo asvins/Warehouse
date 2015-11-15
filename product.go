@@ -13,7 +13,6 @@ type Product struct {
 	Description   string `sql:"size:255"`
 	CurrQuantity  int
 	MinQuantity   int
-	CurrValue     float64
 	PurchProducts []PurchaseProduct
 	Withdrawals   []Withdrawal
 }

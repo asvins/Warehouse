@@ -23,15 +23,15 @@ func _addProduct(p Product) {
 }
 
 func populateProducts() {
-	_addProduct(Product{Name: "coke", Description: "From Coke", Type: 1, CurrQuantity: 60, MinQuantity: 50, CurrValue: 2.0})
-	_addProduct(Product{Name: "h2oh", Description: "From AmBev", Type: 2, CurrQuantity: 100, MinQuantity: 50, CurrValue: 3.0})
-	_addProduct(Product{Name: "pepsi", Description: "From Pepsico", Type: 3, CurrQuantity: 10, MinQuantity: 20, CurrValue: 4.0})
-	_addProduct(Product{Name: "original", Description: "From AmBev", Type: 4, CurrQuantity: 70, MinQuantity: 50, CurrValue: 2.0})
-	_addProduct(Product{Name: "kuat", Description: "From Coke", Type: 5, CurrQuantity: 80, MinQuantity: 90, CurrValue: 2.0})
-	_addProduct(Product{Name: "guarana", Description: "From From AmBev", Type: 6, CurrQuantity: 5, MinQuantity: 10, CurrValue: 1.0})
-	_addProduct(Product{Name: "mate", Description: "From Sei la", Type: 7, CurrQuantity: 60, MinQuantity: 50, CurrValue: 5.0})
-	_addProduct(Product{Name: "soda", Description: "From Coke company", Type: 8, CurrQuantity: 70, MinQuantity: 60, CurrValue: 3.0})
-	_addProduct(Product{Name: "juice", Description: "From Mother Nature", Type: 9, CurrQuantity: 90, MinQuantity: 110, CurrValue: 2.0})
+	_addProduct(Product{Name: "coke", Description: "From Coke", Type: 1, CurrQuantity: 60, MinQuantity: 50})
+	_addProduct(Product{Name: "h2oh", Description: "From AmBev", Type: 2, CurrQuantity: 100, MinQuantity: 50})
+	_addProduct(Product{Name: "pepsi", Description: "From Pepsico", Type: 3, CurrQuantity: 10, MinQuantity: 20})
+	_addProduct(Product{Name: "original", Description: "From AmBev", Type: 4, CurrQuantity: 70, MinQuantity: 50})
+	_addProduct(Product{Name: "kuat", Description: "From Coke", Type: 5, CurrQuantity: 80, MinQuantity: 90})
+	_addProduct(Product{Name: "guarana", Description: "From From AmBev", Type: 6, CurrQuantity: 5, MinQuantity: 10})
+	_addProduct(Product{Name: "mate", Description: "From Sei la", Type: 7, CurrQuantity: 60, MinQuantity: 50})
+	_addProduct(Product{Name: "soda", Description: "From Coke company", Type: 8, CurrQuantity: 70, MinQuantity: 60})
+	_addProduct(Product{Name: "juice", Description: "From Mother Nature", Type: 9, CurrQuantity: 90, MinQuantity: 110})
 }
 
 func getBytes(p Product) []byte {
