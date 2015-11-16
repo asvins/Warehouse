@@ -33,6 +33,22 @@ func DefRoutes() *router.Router {
 	r.Handle("/api/inventory/order/:id/approve", router.PUT, approveOrder, []router.Interceptor{})
 	r.Handle("/api/inventory/order/:id/cancel", router.PUT, cancelOrder, []router.Interceptor{})
 
+	// purchase
+	r.Handle("/api/inventory/purchase", router.GET, retreivePurchase, []router.Interceptor{})
+	r.Handle("/api/inventory/purchase/:id", router.GET, retreivePurchaseById, []router.Interceptor{})
+	r.Handle("/api/inventory/purchase/:id/confirm", router.PUT, confirmPurchase, []router.Interceptor{})
+	r.Handle("/api/inventory/purchase/:id/conclude", router.PUT, concludePurchase, []router.Interceptor{})
+
+	// purchase products
+	r.Handle("/api/inventory/purchaseProducts", router.GET, retreivePurchaseProducts, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProducts/:product_id", router.GET, retreivePurchaseProductsByProductId, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProducts/:id", router.GET, retreivePurchaseProductsById, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProducts/:id/updateQuantity/:quantity", router.PUT, updatePurchaseProductOnQuantity, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProducts/:id/updateValue/:quantity", router.PUT, updatePurchaseProductOnValue, []router.Interceptor{})
+
+	// withdrawal
+	r.Handle("/api/inventory/withdrawal", router.GET, retreiveWithdrawal, []router.Interceptor{})
+
 	// interceptors
 	r.AddBaseInterceptor("/", logger.NewLogger())
 
