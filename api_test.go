@@ -110,6 +110,24 @@ func productExists(id int) bool {
 
 }
 
+func getPurchaseByOrderId(orderId int) *Purchase {
+	response, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/purchase/order/"+strconv.Itoa(orderId), make([]byte, 1), _headers)
+	if err != nil {
+		panic(err)
+	}
+
+	defer response.Body.Close()
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println("[INFO] purchaseByOrderId: ", string(body))
+
+	purchase := Purchase{}
+	if err := json.Unmarshal(body, &purchase); err != nil {
+		panic(err)
+	}
+
+	return &purchase
+}
+
 func getWithdrawals() []Withdrawal {
 	response, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/withdrawal", make([]byte, 1), _headers)
 	if err != nil {
@@ -470,7 +488,7 @@ func TestConsumeProduct2(t *testing.T) {
 
 // PUT http://127.0.0.1:8080/api/inventory/order/:id/approve
 func TestApproveOrder(t *testing.T) {
-	fmt.Println("[INFO] -- TestApproveOrder end --\n")
+	fmt.Println("[INFO] -- TestApproveOrder start --")
 
 	order := getOpenOrder()
 	id := strconv.Itoa(order.ID)
@@ -486,7 +504,170 @@ func TestApproveOrder(t *testing.T) {
 
 	if openOrderExists() {
 		t.Error("[ERROR] Open order shouldn't exist")
-
 	}
-	fmt.Println("[INFO] -- TestApproveOrde end --\n")
+
+	purchase := getPurchaseByOrderId(order.ID)
+	if purchase.OrderId != order.ID || purchase.PurschaseOrder.CreatedAt != order.CreatedAt || len(purchase.PurschaseOrder.Pproducts) != len(order.Pproducts) {
+		t.Error("[ERROR] No Purchase created when order was confirmed")
+	}
+
+	fmt.Println("[INFO] -- TestApproveOrder end --\n")
+}
+
+func TestTryConcludePurchaseBeforeConfirme(t *testing.T) {
+	fmt.Println("[INFO] -- TestTryConcludePurchaseBeforeConfirme start --")
+
+	openResponse, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/purchase/query/open", make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer openResponse.Body.Close()
+	openBody, _ := ioutil.ReadAll(openResponse.Body)
+	fmt.Println("[INFO] openPurchase: ", string(openBody))
+
+	purchases := []Purchase{}
+	if err := json.Unmarshal(openBody, &purchases); err != nil {
+		t.Error(err)
+	}
+
+	if len(purchases) != 1 {
+		t.Error("[ERROR] Number of purchases should be 1, Got: " + strconv.Itoa(len(purchases)))
+	}
+
+	id := purchases[0].ID
+	// Must return 400 - BadRequest
+	response, err := makeRequest(router.PUT, "http://127.0.0.1:8080/api/inventory/purchase/"+strconv.Itoa(id)+"/conclude", make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusBadRequest {
+		t.Error("[ERROR] /purchase/:id/conclude should have received status 400, Got: ", response.StatusCode)
+	}
+
+	fmt.Println("[INFO] -- TestTryConcludePurchaseBeforeConfirm end --\n")
+}
+
+func TestUpdateQuantityAndValue(t *testing.T) {
+	fmt.Println("[INFO] -- TestUpdateQuantityAndValue start --")
+	purchProducts := getPurchaseProducts()
+
+	id := purchProducts[0].ID
+	quantity := 1000
+
+	// updateQuantity
+	url := "http://127.0.0.1:8080/api/inventory/purchaseProduct/" + strconv.Itoa(id) + "/updateQuantity/" + strconv.Itoa(quantity)
+	response, err := makeRequest(router.PUT, url, make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Error("[ERROR] /purchase/:id/conclude should have received status 200, Got: ", response.StatusCode)
+	}
+
+	value := 127.27
+	// updateValue
+	url = "http://127.0.0.1:8080/api/inventory/purchaseProduct/" + strconv.Itoa(id) + "/updateValue/" + strconv.FormatFloat(value, 'f', 6, 64)
+	response, err = makeRequest(router.PUT, url, make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Error("[ERROR] /purchase/:id/conclude should have received status 200, Got: ", response.StatusCode)
+	}
+
+	fmt.Println("[INFO] -- TestUpdateQuantityAndValue end --\n")
+}
+
+func TestConfirmePurchase(t *testing.T) {
+	fmt.Println("[INFO] -- TestConfirmPurchase start --")
+
+	openResponse, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/purchase/query/open", make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer openResponse.Body.Close()
+	openBody, _ := ioutil.ReadAll(openResponse.Body)
+	fmt.Println("[INFO] openPurchase: ", string(openBody))
+
+	purchases := []Purchase{}
+	if err := json.Unmarshal(openBody, &purchases); err != nil {
+		t.Error(err)
+	}
+
+	if len(purchases) != 1 {
+		t.Error("[ERROR] Number of purchases should be 1, Got: " + strconv.Itoa(len(purchases)))
+	}
+
+	id := purchases[0].ID
+	response, err := makeRequest(router.PUT, "http://127.0.0.1:8080/api/inventory/purchase/"+strconv.Itoa(id)+"/confirm", make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Error("[ERROR] /purchase/:id/conclude should have received status 200, Got: ", response.StatusCode)
+	}
+
+	openResponse2, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/purchase/query/open", make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer openResponse2.Body.Close()
+	openBody2, _ := ioutil.ReadAll(openResponse2.Body)
+	fmt.Println("[INFO] openPurchase: ", string(openBody2))
+
+	purchases2 := []Purchase{}
+	if err := json.Unmarshal(openBody2, &purchases2); err != nil {
+		t.Error(err)
+	}
+
+	if len(purchases2) != 0 {
+		t.Error("[ERROR] Number of purchases should be 0, Got: " + strconv.Itoa(len(purchases)))
+	}
+
+	fmt.Println("[INFO] -- TestConfirmePurchase end --\n")
+}
+
+func TestTryUpdateQuantityAndValueWithPurchaseAlreadyConfirmed(t *testing.T) {
+	fmt.Println("[INFO] -- TestTryUpdateQuantityAndValueWithPurchaseAlreadyConfirmed start --")
+
+	purchProducts := getPurchaseProducts()
+
+	id := purchProducts[0].ID
+	quantity := 1000
+
+	// updateQuantity
+	url := "http://127.0.0.1:8080/api/inventory/purchaseProduct/" + strconv.Itoa(id) + "/updateQuantity/" + strconv.Itoa(quantity)
+	response, err := makeRequest(router.PUT, url, make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusBadRequest {
+		t.Error("[ERROR] /purchase/:id/conclude should have received status 400, Got: ", response.StatusCode)
+	}
+
+	value := 127.27
+	// updateValue
+	url = "http://127.0.0.1:8080/api/inventory/purchaseProduct/" + strconv.Itoa(id) + "/updateValue/" + strconv.FormatFloat(value, 'f', 6, 64)
+	response, err = makeRequest(router.PUT, url, make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusBadRequest {
+		t.Error("[ERROR] /purchase/:id/conclude should have received status 400, Got: ", response.StatusCode)
+	}
+
+	defer response.Body.Close()
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println("[INFO] tryingUpdateAfterConfirmedResponse: ", string(body))
+
+	fmt.Println("[INFO] -- TestTryUpdateQuantityAndValueWithPurchaseAlreadyConfirmed end --\n")
 }

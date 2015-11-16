@@ -84,3 +84,21 @@ func (purch *Purchase) Conclude() error {
 
 	return nil
 }
+
+func (purch *Purchase) RetreiveOpen() ([]Purchase, error) {
+	return purch.retreivePlainQuery("confirmed_at = 0 and concluded_at = 0")
+}
+
+func (purch *Purchase) RetreiveConfirmed() ([]Purchase, error) {
+	return purch.retreivePlainQuery("confirmed_at != 0 and concluded_at = 0")
+}
+
+func (purch *Purchase) RetreiveConcluded() ([]Purchase, error) {
+	return purch.retreivePlainQuery("confirmed_at != 0 and concluded_at != 0")
+}
+
+func (purch *Purchase) retreivePlainQuery(query string) ([]Purchase, error) {
+	purchs := []Purchase{}
+	err := db.Where(query).Find(&purchs).Error
+	return purchs, err
+}

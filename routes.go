@@ -33,6 +33,10 @@ func DefRoutes() *router.Router {
 		// purchase
 		discoveryMap["retreive_purchase"] = map[string]string{"GET": "/api/inventory/purchase"}
 		discoveryMap["retreive_purchase_by_id"] = map[string]string{"GET": "/api/inventory/purchase/:id"}
+		discoveryMap["retreive_purchase_by_order_id"] = map[string]string{"GET": "/api/inventory/purchase/product/:order_id"}
+		discoveryMap["confirm_purchase"] = map[string]string{"GET": "/api/inventory/purchase/query/open"}
+		discoveryMap["confirm_purchase"] = map[string]string{"GET": "/api/inventory/purchase/query/confirmed"}
+		discoveryMap["confirm_purchase"] = map[string]string{"GET": "/api/inventory/purchase//queryconcluded"}
 		discoveryMap["confirm_purchase"] = map[string]string{"PUT": "/api/inventory/purchase/:id/confirm"}
 		discoveryMap["conclude_purchase"] = map[string]string{"PUT": "/api/inventory/purchase/:id/conclude"}
 
@@ -68,6 +72,10 @@ func DefRoutes() *router.Router {
 	// purchase
 	r.Handle("/api/inventory/purchase", router.GET, retreivePurchase, []router.Interceptor{})
 	r.Handle("/api/inventory/purchase/:id", router.GET, retreivePurchaseById, []router.Interceptor{})
+	r.Handle("/api/inventory/purchase/order/:order_id", router.GET, retreivePurchaseByOrderId, []router.Interceptor{})
+	r.Handle("/api/inventory/purchase/query/open", router.GET, retreiveOpenPurchase, []router.Interceptor{})
+	r.Handle("/api/inventory/purchase/query/confirmed", router.GET, retreiveConfirmedPurchases, []router.Interceptor{})
+	r.Handle("/api/inventory/purchase/query/concluded", router.GET, retreiveConcludedPurchases, []router.Interceptor{})
 	r.Handle("/api/inventory/purchase/:id/confirm", router.PUT, confirmPurchase, []router.Interceptor{})
 	r.Handle("/api/inventory/purchase/:id/conclude", router.PUT, concludePurchase, []router.Interceptor{})
 

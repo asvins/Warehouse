@@ -63,6 +63,64 @@ func retreivePurchaseById(w http.ResponseWriter, r *http.Request) errors.Http {
 	return nil
 }
 
+func retreivePurchaseByOrderId(w http.ResponseWriter, r *http.Request) errors.Http {
+	params := r.URL.Query()
+	purchase := Purchase{}
+
+	orderId, err := strconv.Atoi(params.Get("order_id"))
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+	purchase.OrderId = orderId
+
+	purchases, err := purchase.Retreive()
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	if len(purchases) != 1 {
+		return errors.NotFound("record not found")
+	}
+
+	rend.JSON(w, http.StatusOK, purchases[0])
+	return nil
+}
+
+func retreiveOpenPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
+	purchase := Purchase{}
+	purchs, err := purchase.RetreiveOpen()
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	rend.JSON(w, http.StatusOK, purchs)
+	return nil
+}
+
+func retreiveConfirmedPurchases(w http.ResponseWriter, r *http.Request) errors.Http {
+	purchase := Purchase{}
+	purchs, err := purchase.RetreiveConfirmed()
+
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	rend.JSON(w, http.StatusOK, purchs)
+	return nil
+}
+
+func retreiveConcludedPurchases(w http.ResponseWriter, r *http.Request) errors.Http {
+	purchase := Purchase{}
+	purchs, err := purchase.RetreiveConcluded()
+
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	rend.JSON(w, http.StatusOK, purchs)
+	return nil
+}
+
 func confirmPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 	var purchase Purchase
 
