@@ -11,7 +11,7 @@ import (
 func DefRoutes() *router.Router {
 	r := router.NewRouter()
 
-	// index - maybe discovery?
+	// discovery
 	r.Handle("/api/discovery", router.GET, func(w http.ResponseWriter, rq *http.Request) errors.Http {
 		discoveryMap := make(map[string]map[string]string)
 

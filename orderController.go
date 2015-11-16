@@ -2,11 +2,21 @@ package main
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/asvins/router/errors"
 	"github.com/asvins/warehouse/decoder"
 )
+
+func FillOrderIdWithUrlValue(o *Order, params url.Values) error {
+	id, err := strconv.Atoi(params.Get("id"))
+	if err != nil {
+		return err
+	}
+	o.ID = id
+	return nil
+}
 
 func retreiveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 	queryString := r.URL.Query()
@@ -31,25 +41,22 @@ func retreiveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func retreiveOrderById(w http.ResponseWriter, r *http.Request) errors.Http {
-	params := r.URL.Query()
 	o := Order{}
 
-	id, err := strconv.Atoi(params.Get("id"))
-	if err != nil {
+	if err := FillOrderIdWithUrlValue(&o, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
-	o.ID = id
 
 	orders, err := o.Retreive()
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	if len(orders) == 0 {
+	if len(orders) != 1 {
 		return errors.NotFound("record not found")
 	}
 
-	rend.JSON(w, http.StatusOK, orders)
+	rend.JSON(w, http.StatusOK, orders[0])
 	return nil
 }
 
@@ -64,15 +71,12 @@ func retreiveOpenOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func approveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
-	var order Order
+	order := Order{}
 
-	params := r.URL.Query()
-	oId, err := strconv.Atoi(params.Get("id"))
-	if err != nil {
+	if err := FillOrderIdWithUrlValue(&order, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	order.ID = oId
 	if err := order.Approve(); err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -82,15 +86,12 @@ func approveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func cancelOrder(w http.ResponseWriter, r *http.Request) errors.Http {
-	var order Order
+	order := Order{}
 
-	params := r.URL.Query()
-	oId, err := strconv.Atoi(params.Get("id"))
-	if err != nil {
+	if err := FillOrderIdWithUrlValue(&order, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	order.ID = oId
 	if err := order.Cancel(); err != nil {
 		return errors.BadRequest(err.Error())
 	}

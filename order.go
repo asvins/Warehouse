@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -50,11 +51,25 @@ func (order *Order) Update() error {
 }
 
 func (order *Order) Approve() error {
-	return db.Model(order).Debug().UpdateColumn(Order{Approved: true, ClosedAt: int(time.Now().Unix())}).Error
+	if err := db.Model(order).UpdateColumn(Order{Approved: true, ClosedAt: int(time.Now().Unix())}).Error; err != nil {
+		return err
+	}
+
+	orders, err := order.Retreive()
+	if err != nil {
+		return err
+	}
+
+	if len(orders) != 1 {
+		return errors.New("[ERROR] Query for recently approved order failed")
+	}
+
+	NewPurchaseFromOrder(&orders[0]).Save()
+	return nil
 }
 
 func (order *Order) Cancel() error {
-	return db.Model(order).Debug().UpdateColumn(Order{Canceled: true, ClosedAt: int(time.Now().Unix())}).Error
+	return db.Model(order).UpdateColumn(Order{Canceled: true, ClosedAt: int(time.Now().Unix())}).Error
 }
 
 // Delete order from database
