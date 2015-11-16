@@ -268,7 +268,7 @@ func TestConsumeProduct(t *testing.T) {
 	quantity := "60"
 	response, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/product/"+id+"/consume/"+quantity, make([]byte, 1), _headers)
 	if err != nil {
-		panic(err)
+		t.Error(err)
 	}
 
 	defer response.Body.Close()
@@ -293,4 +293,23 @@ func TestConsumeProduct(t *testing.T) {
 	}
 
 	fmt.Println("[INFO] -- TestConsumeProduct end --\n")
+}
+
+// PUT http://127.0.0.1:8080/api/inventory/order/:id/approve
+func TestApproveOrder(t *testing.T) {
+	order := getOpenOrder()
+	id := strconv.Itoa(order.ID)
+	response, err := makeRequest(router.PUT, "http://127.0.0.1:8080/api/inventory/order/"+id+"/approve", make([]byte, 1), _headers)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Error("[ERROR] Status code should be: ", http.StatusOK, " Got: ", response.StatusCode)
+	}
+
+	if openOrderExists() {
+		t.Error("[ERROR] Open order shouldn't exist")
+	}
 }

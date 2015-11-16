@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,7 +17,6 @@ func retreiveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	fmt.Println("[DEBUG] oreder: ", o)
 	orders, err := o.Retreive()
 	if err != nil {
 		return errors.BadRequest(err.Error())
@@ -79,6 +77,24 @@ func approveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, order)
+	rend.JSON(w, http.StatusOK, order.ID)
+	return nil
+}
+
+func cancelOrder(w http.ResponseWriter, r *http.Request) errors.Http {
+	var order Order
+
+	params := r.URL.Query()
+	oId, err := strconv.Atoi(params.Get("id"))
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	order.ID = oId
+	if err := order.Cancel(); err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	rend.JSON(w, http.StatusOK, order.ID)
 	return nil
 }

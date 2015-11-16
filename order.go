@@ -10,6 +10,7 @@ type Order struct {
 	ID        int               `json:"id"`
 	Pproducts []PurchaseProduct `json:"purchase_products"`
 	Approved  bool              `json:"approved"`
+	Canceled  bool              `json:"canceled"`
 	CreatedAt int               `json:"created_at"`
 	ClosedAt  int               `json:"closed_at"`
 }
@@ -49,13 +50,16 @@ func (order *Order) Update() error {
 }
 
 func (order *Order) Approve() error {
-	return db.Model(order).Debug().UpdateColumn("approved", "true").Error
+	return db.Model(order).Debug().UpdateColumn(Order{Approved: true, ClosedAt: int(time.Now().Unix())}).Error
+}
+
+func (order *Order) Cancel() error {
+	return db.Model(order).Debug().UpdateColumn(Order{Canceled: true, ClosedAt: int(time.Now().Unix())}).Error
 }
 
 // Delete order from database
 func (order *Order) Delete() error {
-	err := db.Delete(order).Error
-	return err
+	return db.Delete(order).Error
 }
 
 // HasProduct verify if the given order has the specific product
