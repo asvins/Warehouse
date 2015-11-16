@@ -121,6 +121,15 @@ func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, p)
+	ps, err := p.Retreive()
+	if err != nil {
+		return errors.BadRequest(err.Error())
+	}
+
+	if len(ps) != 1 {
+		return errors.InternalServerError("[ERROR] Unexpected error occured during exeuction of /api/inventory/product/:id/consume/:quantity")
+	}
+
+	rend.JSON(w, http.StatusOK, ps[0])
 	return nil
 }

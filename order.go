@@ -89,8 +89,23 @@ func (order *Order) HasProduct(product Product) (bool, error) {
 }
 
 func (order *Order) AddProduct(pproduct *PurchaseProduct) error {
+	queryObj := PurchaseProduct{ProductId: pproduct.ProductId, OrderId: order.ID}
+
+	pps, err := queryObj.Retreive()
+	if err != nil {
+		return err
+	}
+
 	pproduct.OrderId = order.ID
-	return db.Model(order).Association("Pproducts").Append([]PurchaseProduct{*pproduct}).Error
+	if len(pps) == 0 {
+		return db.Model(order).Association("Pproducts").Append([]PurchaseProduct{*pproduct}).Error
+	} else if len(pps) == 1 {
+		pproduct.ID = pps[0].ID
+		return db.Save(pproduct).Error
+	} else {
+		return errors.New("[ERROR] Fatal Error.. database is corrupted")
+	}
+
 }
 
 // RemoveProduct removes a product from the order

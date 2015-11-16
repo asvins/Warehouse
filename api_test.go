@@ -185,6 +185,7 @@ func openOrderExists() bool {
 func TestMain(m *testing.M) {
 	flag.Parse()
 	setup()
+	clean()
 	exitStatus := m.Run()
 	clean()
 	os.Exit(exitStatus)

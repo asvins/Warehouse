@@ -35,6 +35,14 @@ func VerifyUpdatePurchaseProduct(pp *PurchaseProduct) error {
 	return nil
 }
 
+func (pp *PurchaseProduct) Save() error {
+	return db.Create(pp).Error
+}
+
+func (pp *PurchaseProduct) Update() error {
+	return db.Save(pp).Error
+}
+
 func (pp *PurchaseProduct) Retreive() ([]PurchaseProduct, error) {
 	var pproducts []PurchaseProduct
 	return pproducts, db.Where(*pp).Find(&pproducts).Error
