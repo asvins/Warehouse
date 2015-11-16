@@ -3,23 +3,48 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"testing"
 
+	"github.com/asvins/common_db/postgres"
 	"github.com/asvins/router"
+	"github.com/asvins/utils/config"
+	"github.com/jinzhu/gorm"
 )
 
 var (
 	_headers map[string]string
 	products map[string]Product
+	testdb   *gorm.DB
 )
 
 func _addProduct(p Product) {
 
 	products[p.Name] = p
+}
+
+func initDatabase() {
+	err := config.Load("warehouse_config.gcfg", ServerConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	DatabaseConfig := postgres.NewConfig(ServerConfig.Database.User, ServerConfig.Database.DbName, ServerConfig.Database.SSLMode)
+	testdb = postgres.GetDatabase(DatabaseConfig)
+}
+
+func clean() {
+	testdb.Delete(Withdrawal{})
+	testdb.Delete(Purchase{})
+	testdb.Delete(PurchaseProduct{})
+	testdb.Delete(Product{})
+	testdb.Delete(Order{})
 }
 
 func populateProducts() {
@@ -43,10 +68,12 @@ func getBytes(p Product) []byte {
 	return bjson
 }
 
-func init() {
+func setup() {
 	_headers = make(map[string]string)
 	products = make(map[string]Product)
 	populateProducts()
+
+	initDatabase()
 }
 
 func makeRequest(httpMethod string, url string, requestObj []byte, headers map[string]string) (*http.Response, error) {
@@ -112,6 +139,18 @@ func openOrderExists() bool {
 	fmt.Println("[INFO] getOpenOrder: ", string(body))
 
 	return response.StatusCode == http.StatusOK
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////// MAIN //////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+func TestMain(m *testing.M) {
+	flag.Parse()
+	setup()
+	defer clean()
+	os.Exit(m.Run())
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
