@@ -2,18 +2,25 @@ package main
 
 import (
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/asvins/router/errors"
-	"github.com/asvins/warehouse/decoder"
 )
 
-func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	queryString := r.URL.Query()
-	var p Product
-	decoder := decoder.NewDecoder()
+func FillProductIdWithUrlValue(p *Product, params url.Values) error {
+	id, err := strconv.Atoi(params.Get("id"))
+	if err != nil {
+		return err
+	}
+	p.ID = id
 
-	if err := decoder.DecodeURLValues(&p, queryString); err != nil {
+	return nil
+}
+
+func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
+	p := Product{}
+	if err := BuildStructFromQueryString(&p, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -22,23 +29,28 @@ func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
+	if len(products) == 0 {
+		return errors.NotFound("record not found")
+	}
 	rend.JSON(w, http.StatusOK, products)
+
 	return nil
 }
 
 func retreiveProductById(w http.ResponseWriter, r *http.Request) errors.Http {
-	params := r.URL.Query()
 	p := Product{}
 
-	id, err := strconv.Atoi(params.Get("id"))
-	if err != nil {
+	if err := FillProductIdWithUrlValue(&p, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
-	p.ID = id
 
 	products, err := p.Retreive()
 	if err != nil {
 		return errors.BadRequest(err.Error())
+	}
+
+	if len(products) == 0 {
+		return errors.NotFound("record not found")
 	}
 
 	rend.JSON(w, http.StatusOK, products)
@@ -46,10 +58,8 @@ func retreiveProductById(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func insertProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	var p Product
-	decoder := decoder.NewDecoder()
-
-	if err := decoder.DecodeReqBody(&p, r.Body); err != nil {
+	p := Product{}
+	if err := BuildStructFromReqBody(&p, r.Body); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -57,38 +67,32 @@ func insertProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product successfully saved")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }
 
 func updateProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	var p Product
-	decoder := decoder.NewDecoder()
+	p := Product{}
 
-	if err := decoder.DecodeReqBody(&p, r.Body); err != nil {
+	if err := BuildStructFromReqBody(&p, r.Body); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	params := r.URL.Query()
-	id, err := strconv.Atoi(params.Get("id"))
-	if err != nil {
+	if err := FillProductIdWithUrlValue(&p, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
-	p.ID = id
 
 	if err := p.Update(); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product updated successfully")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }
 
 func deleteProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	var p Product
-	decoder := decoder.NewDecoder()
-
-	if err := decoder.DecodeReqBody(&p, r.Body); err != nil {
+	p := Product{}
+	if err := FillProductIdWithUrlValue(&p, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -96,19 +100,16 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product deleted successfully")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }
 
 func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	params := r.URL.Query()
 	p := Product{}
-
-	id, err := strconv.Atoi(params.Get("id"))
-	if err != nil {
+	params := r.URL.Query()
+	if err := FillProductIdWithUrlValue(&p, params); err != nil {
 		return errors.BadRequest(err.Error())
 	}
-	p.ID = id
 
 	qt, err := strconv.Atoi(params.Get("quantity"))
 
@@ -120,6 +121,6 @@ func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	rend.JSON(w, http.StatusOK, "Product consumed successfully")
+	rend.JSON(w, http.StatusOK, p)
 	return nil
 }

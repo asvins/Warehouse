@@ -7,13 +7,14 @@ import (
 
 //Product struct that defines a product
 type Product struct {
-	ID           int
-	Name         string `sql:"size:255"`
-	Type         int    // rethink
-	Description  string `sql:"size:255"`
-	CurrQuantity int
-	MinQuantity  int
-	CurrValue    float64
+	ID            int               `json:"id"`
+	Name          string            `json:"name" sql:"size:255"`
+	Type          int               `json:"type"`
+	Description   string            `json:"description" sql:"size:255"`
+	CurrQuantity  int               `json:"curr_quantity"`
+	MinQuantity   int               `json:"min_quantity"`
+	PurchProducts []PurchaseProduct `json:"purchase_products"`
+	Withdrawals   []Withdrawal      `json:"withdrawals"`
 }
 
 //Save new product on database
@@ -22,9 +23,10 @@ func (p *Product) Save() error {
 		return err
 	}
 
-	if p.NeedRefill() {
-		//return AddProductToOpenOrder(*p)
+	if p.CurrQuantity < p.MinQuantity {
 		fmt.Println("[INFO] Adding product to order")
+		pp := NewPurchaseProduct(p)
+		return AddProductToOpenOrder(pp)
 	}
 
 	return nil
@@ -36,18 +38,19 @@ func (p *Product) Update() error {
 		return err
 	}
 
-	if p.NeedRefill() {
-		// AddProductToOpenOrder(*p)
-		fmt.Println("[INFO] Adding product to order")
+	if p.CurrQuantity < p.MinQuantity {
+		pp := NewPurchaseProduct(p)
+		return AddProductToOpenOrder(pp)
 	} else {
-		fmt.Println("[INFO] UPDATE - product doesn't need refill")
-		//	has, err := OpenOrderHasProduct(*p)
-		//	if err != nil {
-		//		return err
-		//	}
-		//	if has {
-		//		RemoveProductFromOpenOrder(*p)
-		//	}
+		pp := &PurchaseProduct{ProductId: p.ID}
+		order, err := OpenOrderHasProduct(*pp)
+		if err != nil {
+			return err
+		}
+		if order != nil {
+			pp.OrderId = order.ID
+			order.RemoveProduct(*pp)
+		}
 	}
 	return nil
 }
@@ -84,13 +87,6 @@ func (p *Product) Consume(quantity int) error {
 		return err
 	}
 
-	return nil
-}
-
-// NeedRefill verify if product need refill
-func (p *Product) NeedRefill() bool {
-	if p.CurrQuantity < p.MinQuantity {
-		return true
-	}
-	return false
+	w := NewWithdrawl(pp, quantity)
+	return w.Save()
 }

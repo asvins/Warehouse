@@ -1,119 +1,163 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 //Order is the struct that defines the purchase order
 type Order struct {
-	ID       int
-	Products []Product `gorm:"many2many:order_products;"`
-	Valor    int       `json:"valor" sql:"-"`
-	Approved bool
+	ID        int               `json:"id"`
+	Pproducts []PurchaseProduct `json:"purchase_products"`
+	Approved  bool              `json:"approved"`
+	Canceled  bool              `json:"canceled"`
+	CreatedAt int               `json:"created_at"`
+	ClosedAt  int               `json:"closed_at"`
 }
 
-// GetByID ...
-func (order *Order) GetByID(id int) error {
-	order.ID = id
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// ORDER METHODS //////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 
-	products := []Product{}
-	err := db.Model(order).Related(&products, "Products").Error
-	order.Products = products
+// Retreive order from database
+func (order *Order) Retreive() ([]Order, error) {
+	var orders []Order
+	err := db.Where(*order).Find(&orders).Error
 
-	fmt.Println(order)
-	return err
+	for i, o := range orders {
+		pproducts := []PurchaseProduct{}
+		if err := db.Model(o).Related(&pproducts, "Pproducts").Error; err != nil {
+			fmt.Println("[ERROR] ", err.Error())
+			return nil, err
+		}
+		o.Pproducts = pproducts
+		orders[i] = o
+	}
+
+	return orders, err
 }
 
-//Save ..
+//Save order on database
 func (order *Order) Save() error {
 	return db.Create(order).Error
 }
 
-// Update ...
+// Update order on database
 func (order *Order) Update() error {
-	err := db.Save(order).Error
+	return db.Save(order).Error
+}
+
+func (order *Order) Approve() error {
+	if err := db.Model(order).UpdateColumn(Order{Approved: true, ClosedAt: int(time.Now().Unix())}).Error; err != nil {
+		return err
+	}
+
+	orders, err := order.Retreive()
 	if err != nil {
 		return err
 	}
 
-	//TODO update stock items
+	if len(orders) != 1 {
+		return errors.New("[ERROR] Query for recently approved order failed")
+	}
+
+	NewPurchaseFromOrder(&orders[0]).Save()
 	return nil
 }
 
-// Delete ...
+func (order *Order) Cancel() error {
+	return db.Model(order).UpdateColumn(Order{Canceled: true, ClosedAt: int(time.Now().Unix())}).Error
+}
+
+// Delete order from database
 func (order *Order) Delete() error {
-	err := db.Delete(order).Error
-	return err
+	return db.Delete(order).Error
 }
 
-//GetOpenOrder ...
-func GetOpenOrder(order *Order) error {
-	err := db.Where("approved = ?", false).First(order).Error
-	if err != nil {
-		return err
-	}
-	products := []Product{}
-	err = db.Model(order).Related(&products, "Products").Error
-	order.Products = products
-
-	return err
-}
-
-// OpenOrderHasProduct ...
-func OpenOrderHasProduct(product Product) (bool, error) {
-	order := Order{}
-	err := GetOpenOrder(&order)
-	if err != nil {
-		return false, err
-	}
-
-	err = db.Model(order).Association("Products").Find(&product).Error
-
-	if err != nil {
+// HasProduct verify if the given order has the specific product
+func (order *Order) HasProduct(product Product) (bool, error) {
+	if err := db.Model(order).Association("Products").Find(&product).Error; err != nil {
 		if err.Error() == "record not found" {
 			return false, nil
 		}
 		return false, err
 	}
-
 	return true, nil
 }
 
-// RemoveProductFromOpenOrder from the existing opened order
-func RemoveProductFromOpenOrder(product Product) error {
-	order := Order{}
-	err := GetOpenOrder(&order)
-	if err != nil {
-		return err
-	}
-	return db.Model(order).Association("Products").Delete([]Product{product}).Error
+func (order *Order) AddProduct(pproduct *PurchaseProduct) error {
+	pproduct.OrderId = order.ID
+	return db.Model(order).Association("Pproducts").Append([]PurchaseProduct{*pproduct}).Error
 }
 
-// AddProductToOpenOrder to the existing opened order or creates a new order if needed
-func AddProductToOpenOrder(product Product) error {
-	var order Order
-	err := GetOpenOrder(&order)
+// RemoveProduct removes a product from the order
+func (order *Order) RemoveProduct(pproduct PurchaseProduct) error {
+	return db.Where(&pproduct).Delete(&pproduct).Error
+}
+
+// createAndAddProduct will create a new order an insert the given product in it
+func (order *Order) createAndAddProduct(pproduct *PurchaseProduct) error {
+	order.CreatedAt = int(time.Now().Unix())
+	if err := db.Create(order).Error; err != nil {
+		return err
+	}
+
+	return order.AddProduct(pproduct)
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// ORDER FUNCTIONS /////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+
+//GetOpenOrder returns an open order if there is one on database
+func GetOpenOrder() (*Order, error) {
+	order := Order{}
+	if err := db.Where("approved = ?", false).First(&order).Error; err != nil {
+		fmt.Println("[ERROR] ", err.Error())
+		return nil, err
+	}
+
+	pproducts := []PurchaseProduct{}
+	if err := db.Model(order).Related(&pproducts, "Pproducts").Error; err != nil {
+		fmt.Println("[ERROR] ", err.Error())
+		return nil, err
+	}
+	order.Pproducts = pproducts
+
+	return &order, nil
+}
+
+// AddProduct to the existing open order or creates a new order if it needs
+func AddProductToOpenOrder(pproduct *PurchaseProduct) error {
+	order, err := GetOpenOrder()
 	if err != nil {
 		if err.Error() == "record not found" {
-			return order.createOrderAndAddProduct(product)
+			order = &Order{}
+			return order.createAndAddProduct(pproduct)
 		}
 		return err
 	}
-	return order.addProduct(product)
+	return order.AddProduct(pproduct)
 }
 
-func (order *Order) createOrderAndAddProduct(product Product) error {
-	err := db.Create(order).Error
+// the order must have a PurchaseProduct of type Product ...
+func OpenOrderHasProduct(pproduct PurchaseProduct) (*Order, error) {
+	order, err := GetOpenOrder()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = db.Model(order).Association("Products").Append([]Product{product}).Error
-	if err != nil {
-		return err
+	if err = db.Model(order).Association("Pproducts").Find(&pproduct).Error; err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil
+		}
+		return nil, err
 	}
 
-	return nil
-}
-
-func (order *Order) addProduct(product Product) error {
-	return db.Model(order).Association("Products").Append([]Product{product}).Error
+	return order, nil
 }
