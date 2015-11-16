@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/asvins/router"
@@ -13,8 +12,41 @@ func DefRoutes() *router.Router {
 	r := router.NewRouter()
 
 	// index - maybe discovery?
-	r.Handle("/", router.GET, func(w http.ResponseWriter, apiRouter *http.Request) errors.Http {
-		fmt.Fprint(w, "Request made to '/'")
+	r.Handle("/api/discovery", router.GET, func(w http.ResponseWriter, rq *http.Request) errors.Http {
+		discoveryMap := make(map[string]map[string]string)
+
+		// product
+		discoveryMap["retreive_product"] = map[string]string{"GET": "/api/inventory/product"}
+		discoveryMap["retreive_product_by_id"] = map[string]string{"GET": "/api/inventory/product/:id"}
+		discoveryMap["insert_product"] = map[string]string{"POST": "/api/inventory/product"}
+		discoveryMap["update_product"] = map[string]string{"PUT": "/api/inventory/product/:id"}
+		discoveryMap["delete_product"] = map[string]string{"DELETE": "/api/inventory/product/:id"}
+		discoveryMap["consume_product"] = map[string]string{"GET": "/api/inventory/product/:id/consume/:quantity"}
+
+		// order
+		discoveryMap["retreive_order"] = map[string]string{"GET": "/api/inventory/order"}
+		discoveryMap["retreive_open_order"] = map[string]string{"GET": "/api/inventory/order/open"}
+		discoveryMap["retreive_order_by_id"] = map[string]string{"GET": "/api/inventory/order/:id"}
+		discoveryMap["approve_order"] = map[string]string{"PUT": "/api/inventory/order/:id/approve"}
+		discoveryMap["cancel_order"] = map[string]string{"PUT": "/api/inventory/order/:id/cancel"}
+
+		// purchase
+		discoveryMap["retreive_purchase"] = map[string]string{"GET": "/api/inventory/purchase"}
+		discoveryMap["retreive_purchase_by_id"] = map[string]string{"GET": "/api/inventory/purchase/:id"}
+		discoveryMap["confirm_purchase"] = map[string]string{"PUT": "/api/inventory/purchase/:id/confirm"}
+		discoveryMap["conclude_purchase"] = map[string]string{"PUT": "/api/inventory/purchase/:id/conclude"}
+
+		// purchase products
+		discoveryMap["retreive_purchase_product"] = map[string]string{"GET": "/api/inventory/purchaseProducts"}
+		discoveryMap["retreive_purcahse_product_by_product_id"] = map[string]string{"GET": "/api/inventory/purchaseProducts/:product_id"}
+		discoveryMap["retreive_purchase_product_by_id"] = map[string]string{"GET": "/api/inventory/purchaseProducts/:id"}
+		discoveryMap["update_purchase_product_quantity"] = map[string]string{"PUT": "/api/inventory/purchaseProducts/:id/updateQuantity/:quantity"}
+		discoveryMap["update_purchase_product_value"] = map[string]string{"PUT": "/api/inventory/purchaseProducts/:id/updateValue/:value"}
+
+		// withdrawal
+		discoveryMap["retreive_withdrawl"] = map[string]string{"GET": "/api/inventory/withdrawal"}
+
+		rend.JSON(w, http.StatusOK, discoveryMap)
 		return nil
 	}, []router.Interceptor{})
 
@@ -44,7 +76,7 @@ func DefRoutes() *router.Router {
 	r.Handle("/api/inventory/purchaseProducts/:product_id", router.GET, retreivePurchaseProductsByProductId, []router.Interceptor{})
 	r.Handle("/api/inventory/purchaseProducts/:id", router.GET, retreivePurchaseProductsById, []router.Interceptor{})
 	r.Handle("/api/inventory/purchaseProducts/:id/updateQuantity/:quantity", router.PUT, updatePurchaseProductOnQuantity, []router.Interceptor{})
-	r.Handle("/api/inventory/purchaseProducts/:id/updateValue/:quantity", router.PUT, updatePurchaseProductOnValue, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProducts/:id/updateValue/:value", router.PUT, updatePurchaseProductOnValue, []router.Interceptor{})
 
 	// withdrawal
 	r.Handle("/api/inventory/withdrawal", router.GET, retreiveWithdrawal, []router.Interceptor{})
