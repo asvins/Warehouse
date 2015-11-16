@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -35,7 +34,6 @@ func retreivePurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.NotFound("record not found")
 	}
 
-	fmt.Println("[DEBUG] purchases: ", purchases)
 	rend.JSON(w, http.StatusOK, purchases)
 
 	return nil

@@ -28,7 +28,7 @@ func NewPurchaseFromOrder(o *Order) *Purchase {
 // Retreive purchase from database
 func (purch *Purchase) Retreive() ([]Purchase, error) {
 	var purchs []Purchase
-	err := db.Where(*purch).Find(&purchs).Error
+	err := db.Where(purch).Find(&purchs).Error
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (purch *Purchase) Retreive() ([]Purchase, error) {
 
 //Save new purchase into database
 func (purch *Purchase) Save() error {
-	return db.Debug().Create(purch).Error
+	return db.Create(purch).Error
 }
 
 // Update purchase on database
@@ -77,7 +77,7 @@ func (purch *Purchase) Confirm() error {
 
 // Conclude purchase
 func (purch *Purchase) Conclude() error {
-	rowsAffected := db.Model(purch).Debug().Where("confirmed_at != ?", 0).UpdateColumn(Purchase{ConcludedAt: int(time.Now().Unix())}).RowsAffected
+	rowsAffected := db.Model(purch).Where("confirmed_at != ?", 0).UpdateColumn(Purchase{ConcludedAt: int(time.Now().Unix())}).RowsAffected
 	if rowsAffected != 1 {
 		return errors.New("[ERROR] Purchase must be confirmed before conlcuded")
 	}

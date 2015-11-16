@@ -37,11 +37,11 @@ func DefRoutes() *router.Router {
 		discoveryMap["conclude_purchase"] = map[string]string{"PUT": "/api/inventory/purchase/:id/conclude"}
 
 		// purchase products
-		discoveryMap["retreive_purchase_product"] = map[string]string{"GET": "/api/inventory/purchaseProducts"}
-		discoveryMap["retreive_purcahse_product_by_product_id"] = map[string]string{"GET": "/api/inventory/purchaseProducts/:product_id"}
-		discoveryMap["retreive_purchase_product_by_id"] = map[string]string{"GET": "/api/inventory/purchaseProducts/:id"}
-		discoveryMap["update_purchase_product_quantity"] = map[string]string{"PUT": "/api/inventory/purchaseProducts/:id/updateQuantity/:quantity"}
-		discoveryMap["update_purchase_product_value"] = map[string]string{"PUT": "/api/inventory/purchaseProducts/:id/updateValue/:value"}
+		discoveryMap["retreive_purchase_product"] = map[string]string{"GET": "/api/inventory/purchaseProduct"}
+		discoveryMap["retreive_purcahse_product_by_product_id"] = map[string]string{"GET": "/api/inventory/purchaseProduct/product/:product_id"}
+		discoveryMap["retreive_purchase_product_by_id"] = map[string]string{"GET": "/api/inventory/purchaseProduct/:id"}
+		discoveryMap["update_purchase_product_quantity"] = map[string]string{"PUT": "/api/inventory/purchaseProduct/:id/updateQuantity/:quantity"}
+		discoveryMap["update_purchase_product_value"] = map[string]string{"PUT": "/api/inventory/purchaseProduct/:id/updateValue/:value"}
 
 		// withdrawal
 		discoveryMap["retreive_withdrawl"] = map[string]string{"GET": "/api/inventory/withdrawal"}
@@ -72,11 +72,11 @@ func DefRoutes() *router.Router {
 	r.Handle("/api/inventory/purchase/:id/conclude", router.PUT, concludePurchase, []router.Interceptor{})
 
 	// purchase products
-	r.Handle("/api/inventory/purchaseProducts", router.GET, retreivePurchaseProducts, []router.Interceptor{})
-	r.Handle("/api/inventory/purchaseProducts/:product_id", router.GET, retreivePurchaseProductsByProductId, []router.Interceptor{})
-	r.Handle("/api/inventory/purchaseProducts/:id", router.GET, retreivePurchaseProductsById, []router.Interceptor{})
-	r.Handle("/api/inventory/purchaseProducts/:id/updateQuantity/:quantity", router.PUT, updatePurchaseProductOnQuantity, []router.Interceptor{})
-	r.Handle("/api/inventory/purchaseProducts/:id/updateValue/:value", router.PUT, updatePurchaseProductOnValue, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProduct", router.GET, retreivePurchaseProducts, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProduct/product/:product_id", router.GET, retreivePurchaseProductsByProductId, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProduct/:id", router.GET, retreivePurchaseProductsById, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProduct/:id/updateQuantity/:quantity", router.PUT, updatePurchaseProductOnQuantity, []router.Interceptor{})
+	r.Handle("/api/inventory/purchaseProduct/:id/updateValue/:value", router.PUT, updatePurchaseProductOnValue, []router.Interceptor{})
 
 	// withdrawal
 	r.Handle("/api/inventory/withdrawal", router.GET, retreiveWithdrawal, []router.Interceptor{})
