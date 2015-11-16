@@ -110,6 +110,42 @@ func productExists(id int) bool {
 
 }
 
+func getWithdrawals() []Withdrawal {
+	response, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/withdrawal", make([]byte, 1), _headers)
+	if err != nil {
+		panic(err)
+	}
+
+	defer response.Body.Close()
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println("[INFO] response from get Withdrawal: ", string(body))
+
+	ws := []Withdrawal{}
+	if err := json.Unmarshal(body, &ws); err != nil {
+		panic(err)
+	}
+
+	return ws
+}
+
+func getPurchaseProducts() []PurchaseProduct {
+	response, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/purchaseProduct", make([]byte, 1), _headers)
+	if err != nil {
+		panic(err)
+	}
+
+	defer response.Body.Close()
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println("[INFO] response from get Withdrawal: ", string(body))
+
+	pp := []PurchaseProduct{}
+	if err := json.Unmarshal(body, &pp); err != nil {
+		panic(err)
+	}
+
+	return pp
+}
+
 func getOpenOrder() *Order {
 	orderResponse, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/order/open", make([]byte, 1), _headers)
 	if err != nil {
@@ -149,8 +185,9 @@ func openOrderExists() bool {
 func TestMain(m *testing.M) {
 	flag.Parse()
 	setup()
-	defer clean()
-	os.Exit(m.Run())
+	exitStatus := m.Run()
+	clean()
+	os.Exit(exitStatus)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -320,6 +357,7 @@ func TestConsumeProduct(t *testing.T) {
 
 	order := getOpenOrder()
 
+	// Verify if purchase product was added to the existing open order
 	productAdded := false
 	for _, prod := range order.Pproducts {
 		if prod.ProductId == products["h2oh"].ID {
@@ -331,11 +369,108 @@ func TestConsumeProduct(t *testing.T) {
 		t.Error("[EROR] Product NOT added after consume request")
 	}
 
+	//verify if a withdrawal entry was created
+	ws := getWithdrawals()
+	if len(ws) == 0 {
+		t.Error("[ERROR] There should have been Withdrawals on database")
+	}
+
+	wCount := 0
+	for _, w := range ws {
+		if w.ProductId == products["h2oh"].ID {
+			wCount++
+		}
+	}
+
+	if wCount != 1 {
+		t.Error("[ERROR] Expected number of Withdrawals: 1, Got: " + strconv.Itoa(wCount))
+	}
+
+	// verify if the purchase products were created/updated correctly
+	purchaseProductCount := 0
+	pps := getPurchaseProducts()
+	for _, pp := range pps {
+		if (pp.ProductId == products["h2oh"].ID) && (pp.OrderId == order.ID) {
+			purchaseProductCount++
+		}
+	}
+
+	if purchaseProductCount != 1 {
+		t.Error("[ERROR] PurchaseProductCount should be: 1, Got: " + strconv.Itoa(purchaseProductCount))
+	}
+
 	fmt.Println("[INFO] -- TestConsumeProduct end --\n")
+}
+
+func TestConsumeProduct2(t *testing.T) {
+	fmt.Println("[INFO] -- TestConsumeProduct2 start --")
+
+	id := strconv.Itoa(products["h2oh"].ID)
+	quantity := "10"
+	response, err := makeRequest(router.GET, "http://127.0.0.1:8080/api/inventory/product/"+id+"/consume/"+quantity, make([]byte, 1), _headers)
+	if err != nil {
+		t.Error(err)
+	}
+
+	defer response.Body.Close()
+	body, _ := ioutil.ReadAll(response.Body)
+	fmt.Println("[INFO] getOpenOrder: ", string(body))
+
+	if response.StatusCode != http.StatusOK {
+		t.Error("[ERROR] statudCode should be: ", http.StatusOK, " Got: ", response.StatusCode)
+	}
+
+	order := getOpenOrder()
+
+	// Verify if purchase product was added to the existing open order
+	productAdded := false
+	for _, prod := range order.Pproducts {
+		if prod.ProductId == products["h2oh"].ID {
+			productAdded = true
+		}
+	}
+
+	if !productAdded {
+		t.Error("[EROR] Product NOT added after consume request")
+	}
+
+	//verify if a withdrawal entry was created
+	ws := getWithdrawals()
+	if len(ws) == 0 {
+		t.Error("[ERROR] There should have been Withdrawals on database")
+	}
+
+	wCount := 0
+	for _, w := range ws {
+		if w.ProductId == products["h2oh"].ID {
+			wCount++
+		}
+	}
+
+	if wCount != 2 {
+		t.Error("[ERROR] Expected number of Withdrawals: 2, Got: " + strconv.Itoa(wCount))
+	}
+
+	// verify if the purchase products were created/updated correctly
+	purchaseProductCount := 0
+	pps := getPurchaseProducts()
+	for _, pp := range pps {
+		if (pp.ProductId == products["h2oh"].ID) && (pp.OrderId == order.ID) {
+			purchaseProductCount++
+		}
+	}
+
+	if purchaseProductCount != 1 {
+		t.Error("[ERROR] PurchaseProductCount should be: 1, Got: " + strconv.Itoa(purchaseProductCount))
+	}
+
+	fmt.Println("[INFO] -- TestConsumeProduct2 end --\n")
 }
 
 // PUT http://127.0.0.1:8080/api/inventory/order/:id/approve
 func TestApproveOrder(t *testing.T) {
+	fmt.Println("[INFO] -- TestApproveOrder end --\n")
+
 	order := getOpenOrder()
 	id := strconv.Itoa(order.ID)
 	response, err := makeRequest(router.PUT, "http://127.0.0.1:8080/api/inventory/order/"+id+"/approve", make([]byte, 1), _headers)
@@ -350,5 +485,7 @@ func TestApproveOrder(t *testing.T) {
 
 	if openOrderExists() {
 		t.Error("[ERROR] Open order shouldn't exist")
+
 	}
+	fmt.Println("[INFO] -- TestApproveOrde end --\n")
 }
