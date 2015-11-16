@@ -87,5 +87,6 @@ func (p *Product) Consume(quantity int) error {
 		return err
 	}
 
-	return nil
+	w := NewWithdrawl(pp, quantity)
+	return w.Save()
 }
