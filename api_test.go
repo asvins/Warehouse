@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/asvins/common_db/postgres"
@@ -670,4 +671,35 @@ func TestTryUpdateQuantityAndValueWithPurchaseAlreadyConfirmed(t *testing.T) {
 	fmt.Println("[INFO] tryingUpdateAfterConfirmedResponse: ", string(body))
 
 	fmt.Println("[INFO] -- TestTryUpdateQuantityAndValueWithPurchaseAlreadyConfirmed end --\n")
+}
+
+func TestWithdrawalBuildQuery(t *testing.T) {
+	fmt.Println("[INFO] -- TestWithdrawalBuildQuery start --")
+	querystring := map[string][]string{"gte": {"quantity|200", "approved_at|123456789"}, "eq": {"product_id|45", "order_id|100", "name|h2oh", "2"}}
+	w := Withdrawal{Query: querystring}
+
+	query := w.BuildQuery()
+	fmt.Println("[INFO] query = ", query)
+
+	if !strings.Contains(query, "quantity>=200") {
+		t.Error("[ERROR] Withdrawal BuildQuery() 'gte'  is broken")
+	}
+
+	if !strings.Contains(query, "approved_at>=123456789") {
+		t.Error("[ERROR] Withdrawal BuildQuery() 'gte' is broken")
+	}
+
+	if !strings.Contains(query, "product_id=45") {
+		t.Error("[ERROR] Withdrawal BuildQuery() 'eq' is broken")
+	}
+
+	if !strings.Contains(query, "order_id=100") {
+		t.Error("[ERROR] Withdrawal BuildQuery() 'eq' is broken")
+	}
+
+	if !strings.Contains(query, "name='h2oh'") {
+		t.Error("[ERROR] Withdrawal BuildQuery() 'eq' is broken")
+	}
+
+	fmt.Println("[INFO] -- TestWithdrawalBuildQuery end --\n")
 }

@@ -12,6 +12,8 @@ func retreiveWithdrawal(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
+	withd.Query = r.URL.Query()
+
 	ws, err := withd.Retreive()
 	if err != nil {
 		return errors.BadRequest(err.Error())
