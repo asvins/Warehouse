@@ -1,9 +1,11 @@
-package main
+package models
 
 import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 type Purchase struct {
@@ -26,7 +28,7 @@ func NewPurchaseFromOrder(o *Order) *Purchase {
 }
 
 // Retreive purchase from database
-func (purch *Purchase) Retreive() ([]Purchase, error) {
+func (purch *Purchase) Retreive(db *gorm.DB) ([]Purchase, error) {
 	var purchs []Purchase
 	err := db.Where(purch).Find(&purchs).Error
 	if err != nil {
@@ -56,27 +58,27 @@ func (purch *Purchase) Retreive() ([]Purchase, error) {
 }
 
 //Save new purchase into database
-func (purch *Purchase) Save() error {
+func (purch *Purchase) Save(db *gorm.DB) error {
 	return db.Create(purch).Error
 }
 
 // Update purchase on database
-func (purch *Purchase) Update() error {
+func (purch *Purchase) Update(db *gorm.DB) error {
 	return db.Save(purch).Error
 }
 
 // Delete purchase on database
-func (purch *Purchase) Delete() error {
+func (purch *Purchase) Delete(db *gorm.DB) error {
 	return db.Where(purch).Delete(Purchase{}).Error
 }
 
 // Confirm purchase
-func (purch *Purchase) Confirm() error {
+func (purch *Purchase) Confirm(db *gorm.DB) error {
 	return db.Model(purch).UpdateColumn(Purchase{ConfirmedAt: int(time.Now().Unix())}).Error
 }
 
 // Conclude purchase
-func (purch *Purchase) Conclude() error {
+func (purch *Purchase) Conclude(db *gorm.DB) error {
 	rowsAffected := db.Model(purch).Where("confirmed_at != ?", 0).UpdateColumn(Purchase{ConcludedAt: int(time.Now().Unix())}).RowsAffected
 	if rowsAffected != 1 {
 		return errors.New("[ERROR] Purchase must be confirmed before conlcuded")
@@ -85,19 +87,19 @@ func (purch *Purchase) Conclude() error {
 	return nil
 }
 
-func (purch *Purchase) RetreiveOpen() ([]Purchase, error) {
-	return purch.retreivePlainQuery("confirmed_at = 0 and concluded_at = 0")
+func (purch *Purchase) RetreiveOpen(db *gorm.DB) ([]Purchase, error) {
+	return purch.retreivePlainQuery(db, "confirmed_at = 0 and concluded_at = 0")
 }
 
-func (purch *Purchase) RetreiveConfirmed() ([]Purchase, error) {
-	return purch.retreivePlainQuery("confirmed_at != 0 and concluded_at = 0")
+func (purch *Purchase) RetreiveConfirmed(db *gorm.DB) ([]Purchase, error) {
+	return purch.retreivePlainQuery(db, "confirmed_at != 0 and concluded_at = 0")
 }
 
-func (purch *Purchase) RetreiveConcluded() ([]Purchase, error) {
-	return purch.retreivePlainQuery("confirmed_at != 0 and concluded_at != 0")
+func (purch *Purchase) RetreiveConcluded(db *gorm.DB) ([]Purchase, error) {
+	return purch.retreivePlainQuery(db, "confirmed_at != 0 and concluded_at != 0")
 }
 
-func (purch *Purchase) retreivePlainQuery(query string) ([]Purchase, error) {
+func (purch *Purchase) retreivePlainQuery(db *gorm.DB, query string) ([]Purchase, error) {
 	purchs := []Purchase{}
 	err := db.Where(query).Find(&purchs).Error
 	return purchs, err

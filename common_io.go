@@ -22,4 +22,21 @@ func setupCommonIo() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	/*
+	*	Consumer
+	 */
+	consumer = common_io.NewConsumer(cfg)
+	consumer.HandleTopic("product_created", handleProductCreated)
+
+	if err = consumer.StartListening(); err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
+/*
+*	Handlers
+ */
+func handleProductCreated(msg []byte) {
+	// TODO
 }

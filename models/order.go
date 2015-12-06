@@ -1,9 +1,11 @@
-package main
+package models
 
 import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 //Order is the struct that defines the purchase order
@@ -23,7 +25,7 @@ type Order struct {
 //////////////////////////////////////////////////////////////////////////////////
 
 // Retreive order from database
-func (order *Order) Retreive() ([]Order, error) {
+func (order *Order) Retreive(db *gorm.DB) ([]Order, error) {
 	var orders []Order
 	err := db.Where(*order).Find(&orders).Error
 
@@ -41,21 +43,21 @@ func (order *Order) Retreive() ([]Order, error) {
 }
 
 //Save order on database
-func (order *Order) Save() error {
+func (order *Order) Save(db *gorm.DB) error {
 	return db.Create(order).Error
 }
 
 // Update order on database
-func (order *Order) Update() error {
+func (order *Order) Update(db *gorm.DB) error {
 	return db.Save(order).Error
 }
 
-func (order *Order) Approve() error {
+func (order *Order) Approve(db *gorm.DB) error {
 	if err := db.Model(order).UpdateColumn(Order{Approved: true, ClosedAt: int(time.Now().Unix())}).Error; err != nil {
 		return err
 	}
 
-	orders, err := order.Retreive()
+	orders, err := order.Retreive(db)
 	if err != nil {
 		return err
 	}
@@ -64,21 +66,21 @@ func (order *Order) Approve() error {
 		return errors.New("[ERROR] Query for recently approved order failed")
 	}
 
-	NewPurchaseFromOrder(&orders[0]).Save()
+	NewPurchaseFromOrder(&orders[0]).Save(db)
 	return nil
 }
 
-func (order *Order) Cancel() error {
+func (order *Order) Cancel(db *gorm.DB) error {
 	return db.Model(order).UpdateColumn(Order{Canceled: true, ClosedAt: int(time.Now().Unix())}).Error
 }
 
 // Delete order from database
-func (order *Order) Delete() error {
+func (order *Order) Delete(db *gorm.DB) error {
 	return db.Delete(order).Error
 }
 
 // HasProduct verify if the given order has the specific product
-func (order *Order) HasProduct(product Product) (bool, error) {
+func (order *Order) HasProduct(db *gorm.DB, product Product) (bool, error) {
 	if err := db.Model(order).Association("Products").Find(&product).Error; err != nil {
 		if err.Error() == "record not found" {
 			return false, nil
@@ -88,10 +90,10 @@ func (order *Order) HasProduct(product Product) (bool, error) {
 	return true, nil
 }
 
-func (order *Order) AddProduct(pproduct *PurchaseProduct) error {
+func (order *Order) AddProduct(db *gorm.DB, pproduct *PurchaseProduct) error {
 	queryObj := PurchaseProduct{ProductId: pproduct.ProductId, OrderId: order.ID}
 
-	pps, err := queryObj.Retreive()
+	pps, err := queryObj.Retreive(db)
 	if err != nil {
 		return err
 	}
@@ -109,18 +111,18 @@ func (order *Order) AddProduct(pproduct *PurchaseProduct) error {
 }
 
 // RemoveProduct removes a product from the order
-func (order *Order) RemoveProduct(pproduct PurchaseProduct) error {
+func (order *Order) RemoveProduct(db *gorm.DB, pproduct PurchaseProduct) error {
 	return db.Where(&pproduct).Delete(&pproduct).Error
 }
 
 // createAndAddProduct will create a new order an insert the given product in it
-func (order *Order) createAndAddProduct(pproduct *PurchaseProduct) error {
+func (order *Order) createAndAddProduct(db *gorm.DB, pproduct *PurchaseProduct) error {
 	order.CreatedAt = int(time.Now().Unix())
 	if err := db.Create(order).Error; err != nil {
 		return err
 	}
 
-	return order.AddProduct(pproduct)
+	return order.AddProduct(db, pproduct)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +132,7 @@ func (order *Order) createAndAddProduct(pproduct *PurchaseProduct) error {
 //////////////////////////////////////////////////////////////////////////////////
 
 //GetOpenOrder returns an open order if there is one on database
-func GetOpenOrder() (*Order, error) {
+func GetOpenOrder(db *gorm.DB) (*Order, error) {
 	order := Order{}
 	if err := db.Where("approved = ?", false).First(&order).Error; err != nil {
 		fmt.Println("[ERROR] ", err.Error())
@@ -148,21 +150,21 @@ func GetOpenOrder() (*Order, error) {
 }
 
 // AddProduct to the existing open order or creates a new order if it needs
-func AddProductToOpenOrder(pproduct *PurchaseProduct) error {
-	order, err := GetOpenOrder()
+func AddProductToOpenOrder(db *gorm.DB, pproduct *PurchaseProduct) error {
+	order, err := GetOpenOrder(db)
 	if err != nil {
 		if err.Error() == "record not found" {
 			order = &Order{}
-			return order.createAndAddProduct(pproduct)
+			return order.createAndAddProduct(db, pproduct)
 		}
 		return err
 	}
-	return order.AddProduct(pproduct)
+	return order.AddProduct(db, pproduct)
 }
 
 // the order must have a PurchaseProduct of type Product ...
-func OpenOrderHasProduct(pproduct PurchaseProduct) (*Order, error) {
-	order, err := GetOpenOrder()
+func OpenOrderHasProduct(db *gorm.DB, pproduct PurchaseProduct) (*Order, error) {
+	order, err := GetOpenOrder(db)
 	if err != nil {
 		return nil, err
 	}

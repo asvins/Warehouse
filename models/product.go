@@ -1,8 +1,10 @@
-package main
+package models
 
 import (
 	"errors"
 	"fmt"
+
+	"github.com/jinzhu/gorm"
 )
 
 //Product struct that defines a product
@@ -18,7 +20,7 @@ type Product struct {
 }
 
 //Save new product on database
-func (p *Product) Save() error {
+func (p *Product) Save(db *gorm.DB) error {
 	if err := db.Create(p).Error; err != nil {
 		return err
 	}
@@ -26,42 +28,42 @@ func (p *Product) Save() error {
 	if p.CurrQuantity < p.MinQuantity {
 		fmt.Println("[INFO] Adding product to order")
 		pp := NewPurchaseProduct(p)
-		return AddProductToOpenOrder(pp)
+		return AddProductToOpenOrder(db, pp)
 	}
 
 	return nil
 }
 
 // Update product on database
-func (p *Product) Update() error {
+func (p *Product) Update(db *gorm.DB) error {
 	if err := db.Save(p).Error; err != nil {
 		return err
 	}
 
 	if p.CurrQuantity < p.MinQuantity {
 		pp := NewPurchaseProduct(p)
-		return AddProductToOpenOrder(pp)
+		return AddProductToOpenOrder(db, pp)
 	} else {
 		pp := &PurchaseProduct{ProductId: p.ID}
-		order, err := OpenOrderHasProduct(*pp)
+		order, err := OpenOrderHasProduct(db, *pp)
 		if err != nil {
 			return err
 		}
 		if order != nil {
 			pp.OrderId = order.ID
-			order.RemoveProduct(*pp)
+			order.RemoveProduct(db, *pp)
 		}
 	}
 	return nil
 }
 
 // Delete product on database
-func (p *Product) Delete() error {
+func (p *Product) Delete(db *gorm.DB) error {
 	return db.Where(p).Delete(Product{}).Error
 }
 
 // Retreive product on database
-func (p *Product) Retreive() ([]Product, error) {
+func (p *Product) Retreive(db *gorm.DB) ([]Product, error) {
 	var products []Product
 	err := db.Where(*p).Find(&products).Error
 
@@ -70,7 +72,7 @@ func (p *Product) Retreive() ([]Product, error) {
 
 // Consume product using the id provided and quantity
 // if issued quantity > current quantity an error will be returned
-func (p *Product) Consume(quantity int) error {
+func (p *Product) Consume(db *gorm.DB, quantity int) error {
 	var pp Product
 
 	if err := db.Where(*p).First(&pp).Error; err != nil {
@@ -83,10 +85,10 @@ func (p *Product) Consume(quantity int) error {
 
 	pp.CurrQuantity = pp.CurrQuantity - quantity
 
-	if err := pp.Update(); err != nil {
+	if err := pp.Update(db); err != nil {
 		return err
 	}
 
 	w := NewWithdrawl(pp, quantity)
-	return w.Save()
+	return w.Save(db)
 }

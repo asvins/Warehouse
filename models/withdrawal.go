@@ -1,9 +1,11 @@
-package main
+package models
 
 import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 var (
@@ -23,14 +25,14 @@ func NewWithdrawl(prod Product, quantity int) *Withdrawal {
 	return &Withdrawal{ProductId: prod.ID, Quantity: quantity, IssuedAt: int(time.Now().Unix())}
 }
 
-func (w *Withdrawal) Save() error {
+func (w *Withdrawal) Save(db *gorm.DB) error {
 	if err := db.Create(w).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (w *Withdrawal) Retreive() ([]Withdrawal, error) {
+func (w *Withdrawal) Retreive(db *gorm.DB) ([]Withdrawal, error) {
 	var ws []Withdrawal
 	err := db.Where(*w).Find(&ws, w.BuildQuery()).Error
 	return ws, err

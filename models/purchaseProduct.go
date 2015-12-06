@@ -1,6 +1,10 @@
-package main
+package models
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/jinzhu/gorm"
+)
 
 type PurchaseProduct struct {
 	ID        int     `json:"id"`
@@ -14,9 +18,9 @@ func NewPurchaseProduct(p *Product) *PurchaseProduct {
 	return &PurchaseProduct{Quantity: p.MinQuantity - p.CurrQuantity, ProductId: p.ID}
 }
 
-func VerifyUpdatePurchaseProduct(pp *PurchaseProduct) error {
+func VerifyUpdatePurchaseProduct(db *gorm.DB, pp *PurchaseProduct) error {
 	p := &Purchase{OrderId: pp.OrderId}
-	ps, err := p.Retreive()
+	ps, err := p.Retreive(db)
 	if err != nil {
 		return err
 	}
@@ -35,21 +39,21 @@ func VerifyUpdatePurchaseProduct(pp *PurchaseProduct) error {
 	return nil
 }
 
-func (pp *PurchaseProduct) Save() error {
+func (pp *PurchaseProduct) Save(db *gorm.DB) error {
 	return db.Create(pp).Error
 }
 
-func (pp *PurchaseProduct) Update() error {
+func (pp *PurchaseProduct) Update(db *gorm.DB) error {
 	return db.Save(pp).Error
 }
 
-func (pp *PurchaseProduct) Retreive() ([]PurchaseProduct, error) {
+func (pp *PurchaseProduct) Retreive(db *gorm.DB) ([]PurchaseProduct, error) {
 	var pproducts []PurchaseProduct
 	return pproducts, db.Where(*pp).Find(&pproducts).Error
 }
 
-func (pp *PurchaseProduct) UpdateQuantity(quantity int) error {
-	pps, err := pp.Retreive()
+func (pp *PurchaseProduct) UpdateQuantity(db *gorm.DB, quantity int) error {
+	pps, err := pp.Retreive(db)
 	if err != nil {
 		return err
 	}
@@ -60,7 +64,7 @@ func (pp *PurchaseProduct) UpdateQuantity(quantity int) error {
 
 	*pp = pps[0]
 
-	if err := VerifyUpdatePurchaseProduct(pp); err != nil {
+	if err := VerifyUpdatePurchaseProduct(db, pp); err != nil {
 		return err
 	}
 
@@ -74,8 +78,8 @@ func (pp *PurchaseProduct) UpdateQuantity(quantity int) error {
 	return nil
 }
 
-func (pp *PurchaseProduct) UpdateValue(value float64) error {
-	pps, err := pp.Retreive()
+func (pp *PurchaseProduct) UpdateValue(db *gorm.DB, value float64) error {
+	pps, err := pp.Retreive(db)
 	if err != nil {
 		return err
 	}
@@ -86,7 +90,7 @@ func (pp *PurchaseProduct) UpdateValue(value float64) error {
 
 	*pp = pps[0]
 
-	if err := VerifyUpdatePurchaseProduct(pp); err != nil {
+	if err := VerifyUpdatePurchaseProduct(db, pp); err != nil {
 		return err
 	}
 
