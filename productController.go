@@ -6,9 +6,10 @@ import (
 	"strconv"
 
 	"github.com/asvins/router/errors"
+	"github.com/asvins/warehouse/models"
 )
 
-func FillProductIdWithUrlValue(p *Product, params url.Values) error {
+func FillProductIdWithUrlValue(p *models.Product, params url.Values) error {
 	id, err := strconv.Atoi(params.Get("id"))
 	if err != nil {
 		return err
@@ -19,12 +20,12 @@ func FillProductIdWithUrlValue(p *Product, params url.Values) error {
 }
 
 func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	p := Product{}
+	p := models.Product{}
 	if err := BuildStructFromQueryString(&p, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	products, err := p.Retreive()
+	products, err := p.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -38,13 +39,13 @@ func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func retreiveProductById(w http.ResponseWriter, r *http.Request) errors.Http {
-	p := Product{}
+	p := models.Product{}
 
 	if err := FillProductIdWithUrlValue(&p, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	products, err := p.Retreive()
+	products, err := p.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -58,12 +59,12 @@ func retreiveProductById(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func insertProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	p := Product{}
+	p := models.Product{}
 	if err := BuildStructFromReqBody(&p, r.Body); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := p.Save(); err != nil {
+	if err := p.Save(db); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -72,7 +73,7 @@ func insertProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func updateProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	p := Product{}
+	p := models.Product{}
 
 	if err := BuildStructFromReqBody(&p, r.Body); err != nil {
 		return errors.BadRequest(err.Error())
@@ -82,7 +83,7 @@ func updateProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := p.Update(); err != nil {
+	if err := p.Update(db); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -91,12 +92,12 @@ func updateProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func deleteProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	p := Product{}
+	p := models.Product{}
 	if err := FillProductIdWithUrlValue(&p, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := p.Delete(); err != nil {
+	if err := p.Delete(db); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -105,7 +106,7 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
-	p := Product{}
+	p := models.Product{}
 	params := r.URL.Query()
 	if err := FillProductIdWithUrlValue(&p, params); err != nil {
 		return errors.BadRequest(err.Error())
@@ -117,11 +118,11 @@ func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := p.Consume(qt); err != nil {
+	if err := p.Consume(db, qt); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	ps, err := p.Retreive()
+	ps, err := p.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}

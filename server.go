@@ -31,6 +31,11 @@ func init() {
 	DatabaseConfig := postgres.NewConfig(ServerConfig.Database.User, ServerConfig.Database.DbName, ServerConfig.Database.SSLMode)
 	db = postgres.GetDatabase(DatabaseConfig)
 	fmt.Println("[INFO] Initialization Done!")
+
+	/*
+	*	Common io
+	 */
+	setupCommonIo()
 }
 
 func main() {

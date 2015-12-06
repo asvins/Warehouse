@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/asvins/common_io"
 	"github.com/asvins/utils/config"
+	"github.com/asvins/warehouse/models"
 )
 
 func setupCommonIo() {
@@ -38,5 +41,12 @@ func setupCommonIo() {
 *	Handlers
  */
 func handleProductCreated(msg []byte) {
-	// TODO
+	fmt.Println("[INFO] Received Kafka message from topic 'product_created'")
+	p := models.Product{}
+	if err := json.Unmarshal(msg, &p); err != nil {
+		fmt.Println("[ERROR] Unable to Unmarshal json from message 'product_created'", err.Error())
+		return
+	}
+
+	p.Save(db)
 }

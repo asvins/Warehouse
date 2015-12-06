@@ -6,9 +6,10 @@ import (
 	"strconv"
 
 	"github.com/asvins/router/errors"
+	"github.com/asvins/warehouse/models"
 )
 
-func FillPurchaseIdWithUrlValue(p *Purchase, params url.Values) error {
+func FillPurchaseIdWithUrlValue(p *models.Purchase, params url.Values) error {
 	id, err := strconv.Atoi(params.Get("id"))
 	if err != nil {
 		return err
@@ -19,13 +20,13 @@ func FillPurchaseIdWithUrlValue(p *Purchase, params url.Values) error {
 }
 
 func retreivePurchase(w http.ResponseWriter, r *http.Request) errors.Http {
-	purchase := &Purchase{}
+	purchase := &models.Purchase{}
 
 	if err := BuildStructFromQueryString(purchase, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	purchases, err := purchase.Retreive()
+	purchases, err := purchase.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -42,7 +43,7 @@ func retreivePurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 
 func retreivePurchaseById(w http.ResponseWriter, r *http.Request) errors.Http {
 	params := r.URL.Query()
-	purchase := Purchase{}
+	purchase := models.Purchase{}
 
 	id, err := strconv.Atoi(params.Get("id"))
 	if err != nil {
@@ -50,7 +51,7 @@ func retreivePurchaseById(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 	purchase.ID = id
 
-	purchases, err := purchase.Retreive()
+	purchases, err := purchase.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -65,7 +66,7 @@ func retreivePurchaseById(w http.ResponseWriter, r *http.Request) errors.Http {
 
 func retreivePurchaseByOrderId(w http.ResponseWriter, r *http.Request) errors.Http {
 	params := r.URL.Query()
-	purchase := Purchase{}
+	purchase := models.Purchase{}
 
 	orderId, err := strconv.Atoi(params.Get("order_id"))
 	if err != nil {
@@ -73,7 +74,7 @@ func retreivePurchaseByOrderId(w http.ResponseWriter, r *http.Request) errors.Ht
 	}
 	purchase.OrderId = orderId
 
-	purchases, err := purchase.Retreive()
+	purchases, err := purchase.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -87,8 +88,8 @@ func retreivePurchaseByOrderId(w http.ResponseWriter, r *http.Request) errors.Ht
 }
 
 func retreiveOpenPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
-	purchase := Purchase{}
-	purchs, err := purchase.RetreiveOpen()
+	purchase := models.Purchase{}
+	purchs, err := purchase.RetreiveOpen(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -98,8 +99,8 @@ func retreiveOpenPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func retreiveConfirmedPurchases(w http.ResponseWriter, r *http.Request) errors.Http {
-	purchase := Purchase{}
-	purchs, err := purchase.RetreiveConfirmed()
+	purchase := models.Purchase{}
+	purchs, err := purchase.RetreiveConfirmed(db)
 
 	if err != nil {
 		return errors.BadRequest(err.Error())
@@ -110,8 +111,8 @@ func retreiveConfirmedPurchases(w http.ResponseWriter, r *http.Request) errors.H
 }
 
 func retreiveConcludedPurchases(w http.ResponseWriter, r *http.Request) errors.Http {
-	purchase := Purchase{}
-	purchs, err := purchase.RetreiveConcluded()
+	purchase := models.Purchase{}
+	purchs, err := purchase.RetreiveConcluded(db)
 
 	if err != nil {
 		return errors.BadRequest(err.Error())
@@ -122,13 +123,13 @@ func retreiveConcludedPurchases(w http.ResponseWriter, r *http.Request) errors.H
 }
 
 func confirmPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
-	var purchase Purchase
+	var purchase models.Purchase
 
 	if err := FillPurchaseIdWithUrlValue(&purchase, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := purchase.Confirm(); err != nil {
+	if err := purchase.Confirm(db); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -137,13 +138,13 @@ func confirmPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func concludePurchase(w http.ResponseWriter, r *http.Request) errors.Http {
-	var purchase Purchase
+	var purchase models.Purchase
 
 	if err := FillPurchaseIdWithUrlValue(&purchase, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := purchase.Conclude(); err != nil {
+	if err := purchase.Conclude(db); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 

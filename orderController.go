@@ -7,9 +7,10 @@ import (
 
 	"github.com/asvins/router/errors"
 	"github.com/asvins/warehouse/decoder"
+	"github.com/asvins/warehouse/models"
 )
 
-func FillOrderIdWithUrlValue(o *Order, params url.Values) error {
+func FillOrderIdWithUrlValue(o *models.Order, params url.Values) error {
 	id, err := strconv.Atoi(params.Get("id"))
 	if err != nil {
 		return err
@@ -20,14 +21,14 @@ func FillOrderIdWithUrlValue(o *Order, params url.Values) error {
 
 func retreiveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 	queryString := r.URL.Query()
-	var o Order
+	var o models.Order
 	decoder := decoder.NewDecoder()
 
 	if err := decoder.DecodeURLValues(&o, queryString); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	orders, err := o.Retreive()
+	orders, err := o.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -41,13 +42,13 @@ func retreiveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func retreiveOrderById(w http.ResponseWriter, r *http.Request) errors.Http {
-	o := Order{}
+	o := models.Order{}
 
 	if err := FillOrderIdWithUrlValue(&o, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	orders, err := o.Retreive()
+	orders, err := o.Retreive(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -61,7 +62,7 @@ func retreiveOrderById(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func retreiveOpenOrder(w http.ResponseWriter, r *http.Request) errors.Http {
-	order, err := GetOpenOrder()
+	order, err := models.GetOpenOrder(db)
 	if err != nil {
 		return errors.BadRequest(err.Error())
 	}
@@ -71,13 +72,13 @@ func retreiveOpenOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func approveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
-	order := Order{}
+	order := models.Order{}
 
 	if err := FillOrderIdWithUrlValue(&order, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := order.Approve(); err != nil {
+	if err := order.Approve(db); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
@@ -86,13 +87,13 @@ func approveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 }
 
 func cancelOrder(w http.ResponseWriter, r *http.Request) errors.Http {
-	order := Order{}
+	order := models.Order{}
 
 	if err := FillOrderIdWithUrlValue(&order, r.URL.Query()); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
-	if err := order.Cancel(); err != nil {
+	if err := order.Cancel(db); err != nil {
 		return errors.BadRequest(err.Error())
 	}
 
