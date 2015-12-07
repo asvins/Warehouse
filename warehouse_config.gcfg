@@ -7,3 +7,6 @@ port = 8080
 user = postgres
 dbname = warehouse
 sslmode = disable
+
+[deadletter]
+interval = 10
