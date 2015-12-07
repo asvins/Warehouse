@@ -11,8 +11,4 @@ type Config struct {
 		DbName  string
 		SSLMode string
 	}
-
-	Deadletter struct {
-		Interval int
-	}
 }
