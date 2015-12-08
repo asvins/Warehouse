@@ -37,7 +37,7 @@ func retreivePurchaseProducts(w http.ResponseWriter, r *http.Request) errors.Htt
 
 	pproducts, err := pp.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(pproducts) == 0 {
@@ -57,7 +57,7 @@ func retreivePurchaseProductsByProductId(w http.ResponseWriter, r *http.Request)
 
 	pproducts, err := pp.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(pproducts) != 1 {
@@ -77,7 +77,7 @@ func retreivePurchaseProductsById(w http.ResponseWriter, r *http.Request) errors
 
 	pproducts, err := pp.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(pproducts) != 1 {
@@ -101,7 +101,7 @@ func updatePurchaseProductOnQuantity(w http.ResponseWriter, r *http.Request) err
 	}
 
 	if err := pp.UpdateQuantity(db, quantity); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, pp)
@@ -121,7 +121,7 @@ func updatePurchaseProductOnValue(w http.ResponseWriter, r *http.Request) errors
 	}
 
 	if err := pp.UpdateValue(db, value); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, pp)

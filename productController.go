@@ -27,7 +27,7 @@ func retreiveProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	products, err := p.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(products) == 0 {
@@ -47,7 +47,7 @@ func retreiveProductById(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	products, err := p.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(products) == 0 {
@@ -65,7 +65,7 @@ func insertProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := p.Save(db); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, p)
@@ -84,7 +84,7 @@ func updateProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := p.Update(db); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, p)
@@ -98,7 +98,7 @@ func deleteProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := p.Delete(db); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, p)
@@ -119,12 +119,12 @@ func consumeProduct(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := p.Consume(db, qt); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	ps, err := p.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(ps) != 1 {

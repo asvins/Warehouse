@@ -28,7 +28,7 @@ func retreivePurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	purchases, err := purchase.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(purchases) == 0 {
@@ -53,7 +53,7 @@ func retreivePurchaseById(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	purchases, err := purchase.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(purchases) != 1 {
@@ -76,7 +76,7 @@ func retreivePurchaseByOrderId(w http.ResponseWriter, r *http.Request) errors.Ht
 
 	purchases, err := purchase.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(purchases) != 1 {
@@ -91,7 +91,7 @@ func retreiveOpenPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 	purchase := models.Purchase{}
 	purchs, err := purchase.RetreiveOpen(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, purchs)
@@ -103,7 +103,7 @@ func retreiveConfirmedPurchases(w http.ResponseWriter, r *http.Request) errors.H
 	purchs, err := purchase.RetreiveConfirmed(db)
 
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, purchs)
@@ -115,7 +115,7 @@ func retreiveConcludedPurchases(w http.ResponseWriter, r *http.Request) errors.H
 	purchs, err := purchase.RetreiveConcluded(db)
 
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, purchs)
@@ -130,7 +130,7 @@ func confirmPurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := purchase.Confirm(db); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, purchase.ID)
@@ -145,7 +145,7 @@ func concludePurchase(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := purchase.Conclude(db); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, purchase.ID)

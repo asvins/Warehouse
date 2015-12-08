@@ -30,7 +30,7 @@ func retreiveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	orders, err := o.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(orders) == 0 {
@@ -50,7 +50,7 @@ func retreiveOrderById(w http.ResponseWriter, r *http.Request) errors.Http {
 
 	orders, err := o.Retreive(db)
 	if err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	if len(orders) != 1 {
@@ -79,7 +79,7 @@ func approveOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := order.Approve(db); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, order.ID)
@@ -94,7 +94,7 @@ func cancelOrder(w http.ResponseWriter, r *http.Request) errors.Http {
 	}
 
 	if err := order.Cancel(db); err != nil {
-		return errors.BadRequest(err.Error())
+		return errors.InternalServerError(err.Error())
 	}
 
 	rend.JSON(w, http.StatusOK, order.ID)
