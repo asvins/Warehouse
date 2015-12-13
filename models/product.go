@@ -26,8 +26,11 @@ func (p *Product) Save(db *gorm.DB) error {
 		return err
 	}
 
+	fmt.Println("[INFO] Product saved..")
+	fmt.Println("[INFO] Will verify if refill is needed")
+
 	if p.CurrQuantity < p.MinQuantity {
-		fmt.Println("[INFO] Adding product to order")
+		fmt.Println("[INFO] It does need refill")
 		pp := NewPurchaseProduct(p)
 		return AddProductToOpenOrder(db, pp)
 	}

@@ -98,13 +98,17 @@ func (order *Order) AddProduct(db *gorm.DB, pproduct *PurchaseProduct) error {
 		return err
 	}
 
+	fmt.Println("[INFO] Inside AddProduct....1")
 	pproduct.OrderId = order.ID
 	if len(pps) == 0 {
+		fmt.Println("[INFO] Inside AddProduct....2")
 		return db.Model(order).Association("Pproducts").Append([]PurchaseProduct{*pproduct}).Error
 	} else if len(pps) == 1 {
+		fmt.Println("[INFO] Inside AddProduct....3")
 		pproduct.ID = pps[0].ID
 		return db.Save(pproduct).Error
 	} else {
+		fmt.Println("[INFO] Inside AddProduct....4")
 		return errors.New("[ERROR] Fatal Error.. database is corrupted")
 	}
 
@@ -139,11 +143,16 @@ func GetOpenOrder(db *gorm.DB) (*Order, error) {
 		return nil, err
 	}
 
+	fmt.Println("[INFO] Found open order!")
+	fmt.Println("[INFO] Will find purchase Products that belong to it")
+
 	pproducts := []PurchaseProduct{}
 	if err := db.Model(order).Related(&pproducts, "Pproducts").Error; err != nil {
 		fmt.Println("[ERROR] ", err.Error())
 		return nil, err
 	}
+
+	fmt.Println("[INFO] Found all purchase products!!!!")
 	order.Pproducts = pproducts
 
 	return &order, nil
@@ -155,10 +164,13 @@ func AddProductToOpenOrder(db *gorm.DB, pproduct *PurchaseProduct) error {
 	if err != nil {
 		if err.Error() == "record not found" {
 			order = &Order{}
+			fmt.Println("[DEBUG] WILL CREATE NEW ORDER BEFORE INSERTING")
 			return order.createAndAddProduct(db, pproduct)
 		}
 		return err
 	}
+
+	fmt.Println("[DEBUG] WILL USE ALREADY OPENED ORDER")
 	return order.AddProduct(db, pproduct)
 }
 
