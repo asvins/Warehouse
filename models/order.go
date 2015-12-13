@@ -11,11 +11,11 @@ import (
 //Order is the struct that defines the purchase order
 type Order struct {
 	ID        int               `json:"id"`
-	Pproducts []PurchaseProduct `json:"purchase_products"`
 	Approved  bool              `json:"approved"`
 	Canceled  bool              `json:"canceled"`
 	CreatedAt int               `json:"created_at"`
 	ClosedAt  int               `json:"closed_at"`
+	Pproducts []PurchaseProduct `json:"purchase_products"`
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +91,12 @@ func (order *Order) HasProduct(db *gorm.DB, product Product) (bool, error) {
 }
 
 func (order *Order) AddProduct(db *gorm.DB, pproduct *PurchaseProduct) error {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
+
 	queryObj := PurchaseProduct{ProductId: pproduct.ProductId, OrderId: order.ID}
 
 	pps, err := queryObj.Retreive(db)
@@ -102,7 +108,17 @@ func (order *Order) AddProduct(db *gorm.DB, pproduct *PurchaseProduct) error {
 	pproduct.OrderId = order.ID
 	if len(pps) == 0 {
 		fmt.Println("[INFO] Inside AddProduct....2")
-		return db.Model(order).Association("Pproducts").Append([]PurchaseProduct{*pproduct}).Error
+		fmt.Println("[INFO] pproduct", pproduct)
+		fmt.Println("[INFO] pproduct", *pproduct)
+
+		assoc := db.Model(order).Association("Pproducts").Append(pproduct)
+		if assoc == nil {
+			fmt.Println("[INFO] association NIL")
+			return nil
+		} else {
+			fmt.Println("[INFO] associaton != NIL")
+			return assoc.Error
+		}
 	} else if len(pps) == 1 {
 		fmt.Println("[INFO] Inside AddProduct....3")
 		pproduct.ID = pps[0].ID
@@ -121,6 +137,7 @@ func (order *Order) RemoveProduct(db *gorm.DB, pproduct PurchaseProduct) error {
 
 // createAndAddProduct will create a new order an insert the given product in it
 func (order *Order) createAndAddProduct(db *gorm.DB, pproduct *PurchaseProduct) error {
+	fmt.Println("[DEBUG] WILL CREATE NEW ORDER BEFORE INSERTING")
 	order.CreatedAt = int(time.Now().Unix())
 	if err := db.Create(order).Error; err != nil {
 		return err
