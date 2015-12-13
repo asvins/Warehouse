@@ -17,6 +17,7 @@ type Product struct {
 	MinQuantity   int               `json:"min_quantity"`
 	PurchProducts []PurchaseProduct `json:"purchase_products"`
 	Withdrawals   []Withdrawal      `json:"withdrawals"`
+	CurrentValue  float64           `json:"current_value"`
 }
 
 //Save new product on database
