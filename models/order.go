@@ -117,6 +117,7 @@ func (order *Order) RemoveProduct(db *gorm.DB, pproduct PurchaseProduct) error {
 
 // createAndAddProduct will create a new order an insert the given product in it
 func (order *Order) createAndAddProduct(db *gorm.DB, pproduct *PurchaseProduct) error {
+	fmt.Println("[DEBUG] WILL CREATE NEW ORDER BEFORE INSERTING")
 	order.CreatedAt = int(time.Now().Unix())
 	if err := db.Create(order).Error; err != nil {
 		return err
