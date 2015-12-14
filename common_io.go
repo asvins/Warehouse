@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/asvins/common_io"
 	"github.com/asvins/utils/config"
@@ -47,6 +49,11 @@ func handleProductCreated(msg []byte) {
 		fmt.Println("[ERROR] Unable to Unmarshal json from message 'product_created'", err.Error())
 		return
 	}
+	p.CurrQuantity = 100000
+	p.MinQuantity = 90
+
+	rand.Seed(time.Now().UTC().UnixNano())
+	p.CurrentValue = float64(rand.Intn(10)) / 10.0
 
 	if err := p.Save(db); err != nil {
 		producer.Publish("product_created_dead_letter", msg)
